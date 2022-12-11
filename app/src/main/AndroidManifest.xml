@@ -16,11 +16,11 @@
         >
         <activity
             android:exported="true"
-            android:screenOrientation="portrait"
+            android:screenOrientation="landscape"
             android:name="com.tmp.thermaquil.activities.MainActivity" />
         <activity
             android:exported="true"
-            android:screenOrientation="portrait"
+            android:screenOrientation="landscape"
             android:name="com.tmp.thermaquil.activities.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
