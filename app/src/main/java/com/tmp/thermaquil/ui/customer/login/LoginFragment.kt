@@ -1,0 +1,6 @@
+package com.tmp.thermaquil.ui.customer.login
+
+import com.tmp.thermaquil.base.fragment.BaseFragment
+
+class LoginFragment : BaseFragment() {
+}
