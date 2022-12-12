@@ -12,7 +12,7 @@ class SplashActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.e("Frank","SplashAcitivty")
+        Log.e("SplashActivity","SplashAcitivty")
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_splash)

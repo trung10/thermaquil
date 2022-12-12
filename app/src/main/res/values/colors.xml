@@ -4,9 +4,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="primaryColor">#ff6c2f</color>
+    <color name="primaryColor">@color/colorA2A2A2</color>
     <color name="primaryLightColor">#ff9e5d</color>
-    <color name="primaryDarkColor">#c53a00</color>
+    <color name="primaryDarkColor">@color/color888888</color>
 
     <color name="primaryTextColor">#000000</color>
     <color name="error_color">@android:color/holo_red_light</color>
@@ -24,5 +24,13 @@
 
 
     <color name="icon_color_normal">#B7B7B7</color>
+
+    <color name="colorF86666">#F86666</color>
+    <color name="colorC4D1A6">#C1D1A1</color>
+    <color name="colorDA8C47">#E68834</color>
+    <color name="colorDFDFDF">#DFDFDF</color>
+    <color name="colorA2A2A2">#A2A2A2</color>
+    <color name="color888888">#888888</color>
+    <color name="colorA5A5A5">#A5A5A5</color>
 
 </resources>
