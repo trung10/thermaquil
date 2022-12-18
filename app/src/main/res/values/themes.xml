@@ -12,6 +12,7 @@
         <item name="colorSecondary">@color/primaryLightColor</item>
         <item name="colorSecondaryVariant">@color/primaryDarkColor</item>
         <item name="colorOnSecondary">#c53a00</item>
+        <!--<item name="backgroundColor">@color/color1E252F</item>-->
         <!-- Status bar color. -->
 <!--        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>-->
         <item name="android:statusBarColor">@color/color888888</item>
@@ -33,5 +34,10 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowCloseOnTouchOutside">false</item>
     </style>
+
+    <style name="SpinnerTheme" parent="android:Widget.Spinner">
+        <item name="android:background">@drawable/background_spinner</item>
+    </style>
+
 
 </resources>

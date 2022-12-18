@@ -1,4 +1,61 @@
 <resources>
     <string name="app_name">Thermaquil</string>
     <string name="default_notify_title">Message</string>
+
+    <string name="ble_not_supported">BLE is not supported</string>
+    <string name="label_data">Data:</string>
+    <string name="label_device_address">Device address:</string>
+    <string name="label_state">State:</string>
+    <string name="no_data">No data</string>
+    <string name="connected">Connected</string>
+
+    <string name="disconnected">Disconnected</string>
+    <string name="title_devices">BLE Device Scan</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
+    <string name="unknown_device">Unknown device</string>
+    <string name="unknown_characteristic">Unknown characteristic</string>
+    <string name="unknown_service">Unknown service</string>
+    <!-- Menu items -->
+    <string name="menu_connect">Connect</string>
+    <string name="menu_disconnect">Disconnect</string>
+    <string name="menu_scan">Scan</string>
+    <string name="menu_stop">Stop</string>
+    <string name="device_connected">CONNECTED</string>
+    <string name="device_disconnected">DISCONNECTED</string>
+    <string name="ble_device_key">askljdgjKLSDGJlKJSgdlkd</string>
+    <string name="agm_key">KLAFDJGkljasdglJASFLDFKSJFLKASDJGK</string>
+
+    <string name="get_started">Get started</string>
+    <string name="start_treat">start treatment</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="device_info">
+        Non tortor, mattis ultricies. Et nisi lacinia mattis consectetur cras ultricies.\n
+        Sit vestibulum lorem et sed cras odio. Odio. Lectus leo, molestie lacinia luctus efficitur sit tortor, mauris augue dolor lacinia quam, vestibulum tortor, justo sed quis, libero, et eleifend non dolor et amet, cras amet, nunc luctus dui lacinia sodales luctus hac molestie vel mattis amet, sit in lacinia dictumst. Faucibus. Risus et id eget lectus mauris venenatis augue faucibus. Dui consectetur hac sed ultricies.\n
+        Orci, venenatis urna accumsan mollis dictum mattis nunc id non ut. Tempus tempus orci, sapien hac ut. Luctus non sit morbi dictumst. Amet, justo cras tortor, tortor, ultricies. Sed quam, justo nunc vulputate in id integer mattis pulvina.\n
+        Non tortor, mattis ultricies. Et nisi lacinia mattis consectetur cras ultricies.\n
+        Sit vestibulum lorem et sed cras odio. Odio. Lectus leo, molestie lacinia luctus efficitur sit tortor, mauris augue dolor lacinia quam, vestibulum tortor, justo sed quis, libero, et eleifend non dolor et amet, cras amet, nunc luctus dui lacinia sodales luctus hac molestie vel mattis amet, sit in lacinia dictumst. Faucibus. Risus et id eget lectus mauris venenatis augue faucibus. Dui consectetur hac sed ultricies.
+    </string>
+    <string name="device_info_tile">Instruction for using the device</string>
+    <string name="next">Next</string>
+    <string name="dont_ask">Don\'t show it again</string>
+    <string name="enter_passcode">Enter the passcode to activate\nthe device</string>
+    <string name="input_phone">Please specify the phone number that was used\nfor the study</string>
+    <string name="input_otp">Please fill in the code that you’ve received\nvia SMS</string>
+    <string name="submit">Submit</string>
+    <string name="finish">Finish</string>
+    <string name="thanks">Treatment is complete. Thank you!</string>
+    <string name="next_submission_in">Next Submission in</string>
+    <string name="settings">Settings</string>
+    <string name="fluid_fill">Fluid fill</string>
+    <string name="skin_sensitivity_hair_density"><![CDATA[Skin sensitivity & Hair density]]></string>
+    <string name="skin_sensitivity">Skin sensitivity</string>
+    <string name="hair_density">Hair density</string>
+    <string name="head_dot">Head:</string>
+    <string name="normal">Normal</string>
+    <string name="cold">Cold:</string>
+    <string name="no_hair">No Hair</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="ok">Ok</string>
 </resources>

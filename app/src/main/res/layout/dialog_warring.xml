@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/_5sdp"
+    android:padding="@dimen/_5sdp"
+    app:cardBackgroundColor="@color/color29303D"
+    app:cardCornerRadius="@dimen/_10sdp"
+    app:cardElevation="@dimen/_3sdp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="24dp"
+            android:fontFamily="@font/opensans_medium"
+            android:textAlignment="center"
+            android:textColor="@color/colorF5F7FA"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="24dp"
+            android:fontFamily="@font/opensans_regular"
+            android:textColor="@color/colorA0ACBA"
+            android:textSize="12sp"
+            android:visibility="visible" />
+
+
+        <LinearLayout
+            android:layout_width="@dimen/_150sdp"
+            android:layout_height="wrap_content"
+            android:layout_margin="24dp"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnNegative"
+                style="@style/button_style_normal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/_15sdp"
+                android:paddingEnd="@dimen/_15sdp"
+                android:text="@string/cancel"
+                android:textColor="@color/colorE16109"
+                android:background="@drawable/background_cancel"
+                />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_marginTop="@dimen/_5sdp"
+                android:id="@+id/btnPositive"
+                style="@style/button_style_normal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/_15sdp"
+                android:background="@drawable/background_apply"
+                android:paddingEnd="@dimen/_15sdp"
+                android:text="@string/apply"
+                android:textColor="@color/color3E9629" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

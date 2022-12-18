@@ -2,20 +2,138 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_nav"
-    app:startDestination="@id/treatmentFragment">
+    app:startDestination="@id/phoneFragment">
 
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.tmp.thermaquil.ui.home.HomeFragment"
-        android:label="HomeFragment" />
+        android:label="HomeFragment" >
 
-    <fragment
+        <action
+            android:id="@+id/action_homeFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_passcodeFragment"
+            app:destination="@id/passcodeFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+    </fragment>
+
+    <dialog
         android:id="@+id/pauseTreatmentFragment"
         android:name="com.tmp.thermaquil.ui.pauseTreatment.PauseTreatmentFragment"
-        android:label="PauseTreatmentFragment" />
+        android:label="PauseTreatmentFragment" >
+        <action
+            android:id="@+id/action_pauseTreatmentFragment_to_summaryFragment"
+            app:destination="@id/summaryFragment" />
+    </dialog>
 
     <fragment
         android:id="@+id/treatmentFragment"
         android:name="com.tmp.thermaquil.ui.treament.TreatmentFragment"
-        android:label="TreatmentFragment" />
+        android:label="TreatmentFragment" >
+        <action
+            android:id="@+id/action_treatmentFragment_to_pauseTreatmentFragment"
+            app:destination="@id/pauseTreatmentFragment" />
+        <action
+            android:id="@+id/action_treatmentFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+        <action
+            android:id="@+id/action_treatmentFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.tmp.thermaquil.ui.search.SearchFragment"
+        android:label="SearchFragment" >
+        <action
+            android:id="@+id/action_searchFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/currentPainFragment"
+        android:name="com.tmp.thermaquil.ui.currentPain.CurrentPainFragment"
+        android:label="currentPainFragment" >
+        <action
+            android:id="@+id/action_currentPainFragment_to_deviceInfoFragment"
+            app:destination="@id/deviceInfoFragment" />
+        <action
+            android:id="@+id/action_currentPainFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/deviceInfoFragment"
+        android:name="com.tmp.thermaquil.ui.deviceInfo.DeviceInfoFragment"
+        android:label="deviceInfoFragment" >
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_treatmentFragment"
+            app:destination="@id/treatmentFragment" />
+        <action
+            android:id="@+id/action_deviceInfoFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/passcodeFragment"
+        android:name="com.tmp.thermaquil.ui.passcode.PasscodeFragment"
+        android:label="PasscodeFragment" >
+        <action
+            android:id="@+id/action_passcodeFragment_to_currentPainFragment"
+            app:destination="@id/currentPainFragment" />
+        <action
+            android:id="@+id/action_passcodeFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/phoneFragment"
+        android:name="com.tmp.thermaquil.ui.phone.PhoneFragment"
+        android:label="PhoneFragment" >
+        <action
+            android:id="@+id/action_phoneFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/summaryFragment"
+        android:name="com.tmp.thermaquil.ui.summary.SummaryFragment"
+        android:label="SummaryFragment" >
+        <action
+            android:id="@+id/action_summaryFragment_to_CompleteFragment"
+            app:destination="@id/CompleteFragment" />
+        <action
+            android:id="@+id/action_summaryFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/CompleteFragment"
+        android:name="com.tmp.thermaquil.ui.complete.CompleteFragment"
+        android:label="CompleteFragment" >
+
+        <action
+            android:id="@+id/action_CompleteFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/SettingsFragment"
+        android:name="com.tmp.thermaquil.ui.settings.SettingsFragment"
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_SettingsFragment_to_SkinAndHairFragment"
+            app:destination="@id/SkinAndHairFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/SkinAndHairFragment"
+        android:name="com.tmp.thermaquil.ui.skinAndHair.SkinAndHairFragment"
+        android:label="SkinAndHairFragment" />
+
 </navigation>
