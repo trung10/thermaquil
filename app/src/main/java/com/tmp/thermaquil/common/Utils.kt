@@ -4,6 +4,9 @@ import android.content.Context
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
 import kotlin.experimental.and
 
 
@@ -87,5 +90,21 @@ object Utils{
 
     fun intTo4Bytes(i: Int): ArrayList<Byte> {
         return arrayListOf((i shr 0).toByte(), (i shr 8).toByte(), (i shr 16).toByte(), (i shr 24).toByte())
+    }
+
+    fun writeFileOnInternalStorage(mcoContext: Context, sFileName: String?, bytes: ArrayList<Byte>) {
+        val dir = File(mcoContext.filesDir, "mydir")
+        if (!dir.exists()) {
+            dir.mkdir()
+        }
+        try {
+            val gpxfile = File(dir, sFileName)
+            val writer = FileOutputStream(gpxfile)
+            writer.write(bytes.toByteArray())
+            writer.flush()
+            writer.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

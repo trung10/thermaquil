@@ -11,20 +11,16 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.tmp.thermaquil.R
-import com.tmp.thermaquil.ble.GattAttributes.ACCELEROMETER_TIME_READ
-import com.tmp.thermaquil.ble.GattAttributes.BATTERY_LEVEL_READ
-import com.tmp.thermaquil.ble.GattAttributes.GENERIC
-import com.tmp.thermaquil.ble.GattAttributes.TEST
-import com.tmp.thermaquil.ble.GattAttributes.X_ACCELERATION_READ
-import com.tmp.thermaquil.ble.GattAttributes.X_GYROSCOPE_READ
-import com.tmp.thermaquil.ble.GattAttributes.Y_ACCELERATION_READ
-import com.tmp.thermaquil.ble.GattAttributes.Y_GYROSCOPE_READ
-import com.tmp.thermaquil.ble.GattAttributes.Z_ACCELERATION_READ
-import com.tmp.thermaquil.ble.GattAttributes.Z_GYROSCOPE_READ
+import com.tmp.thermaquil.ble.GattAttributes.PCM_BLOCK_READ
+import com.tmp.thermaquil.ble.GattAttributes.PCM_COMMANDS_READ
+import com.tmp.thermaquil.ble.GattAttributes.PCM_EVENT_READ
+import com.tmp.thermaquil.ble.GattAttributes.PCM_STATUS_READ
+import com.tmp.thermaquil.ble.GattAttributes.PCM_SW_READ
 import com.tmp.thermaquil.common.Utils
 import com.tmp.thermaquil.data.models.AccelerometerData
 import com.tmp.thermaquil.data.models.BatteryData
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.experimental.and
 
 /*
@@ -32,7 +28,7 @@ import kotlin.experimental.and
  *
  * */
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-class BluetoothLeService: Service() {
+class BluetoothLeService : Service() {
     private final val TAG = BluetoothLeService::class.java.getSimpleName()
 
     private var bleManager: BluetoothManager? = null
@@ -43,23 +39,13 @@ class BluetoothLeService: Service() {
     private var connectionState: Int = STATE_DISCONNECTED
     var chars = arrayListOf<BluetoothGattCharacteristic>()
 
-    /*private lateinit var testChar: BluetoothGattCharacteristic
-    private lateinit var powerChar: BluetoothGattCharacteristic*/
-
-    private lateinit var accelerometerData: AccelerometerData
-    private var xAcc = arrayListOf<Int?>()
-    private var yAcc = arrayListOf<Int?>()
-    private var zAcc = arrayListOf<Int?>()
-    private var xGyro = arrayListOf<Int?>()
-    private var yGyro = arrayListOf<Int?>()
-    private var zGyro = arrayListOf<Int?>()
-    private var accTime = arrayListOf<Date?>()
-
     private lateinit var batteryData: BatteryData
     private var batteryLevel: Int = 0
     private var sweepComplete = false
 
-    private var writeEnable = true
+    private var readWriteEnable = true
+
+    private var flow = 0 // 1 prepare, 2 log file
 
     companion object {
         private final val STATE_DISCONNECTED = 0
@@ -75,20 +61,17 @@ class BluetoothLeService: Service() {
         public val ACTION_ERROR = "ACTION_ERROR";
         public val ACTION_PREPARE_SUCCESS = "ACTION_PREPARE_SUCCESS";
 
-        public val UUID_X_ACCELERATION = UUID.fromString(GattAttributes.X_ACCELERATION_MEASUREMENT);
-        public val UUID_Y_ACCELERATION = UUID.fromString(GattAttributes.Y_ACCELERATION_MEASUREMENT);
-        public val UUID_Z_ACCELERATION = UUID.fromString(GattAttributes.Z_ACCELERATION_MEASUREMENT);
-        public val UUID_X_GYROSCOPE = UUID.fromString(GattAttributes.X_GYROSCOPE_MEASUREMENT);
-        public val UUID_Y_GYROSCOPE = UUID.fromString(GattAttributes.Y_GYROSCOPE_MEASUREMENT);
-        public val UUID_Z_GYROSCOPE = UUID.fromString(GattAttributes.Z_GYROSCOPE_MEASUREMENT);
-        public val UUID_ACCELERATION_TIME =
-            UUID.fromString(GattAttributes.ACCELEROMETER_TIME_MEASUREMENT);
+        public val UUID_PCM_SERVICE = UUID.fromString(GattAttributes.PCM_SERVICE)
+
+        public val UUID_COMMANDS = UUID.fromString(GattAttributes.PCM_COMMANDS_ATTRIBUTE)
+        public val UUID_EVENT = UUID.fromString(GattAttributes.PCM_EVENT_ATTRIBUTE)
+        public val UUID_SW_READ = UUID.fromString(GattAttributes.PCM_SW_ATTRIBUTE)
+
+        public val UUID_STATUS_READ = UUID.fromString(GattAttributes.PCM_STATUS_ATTRIBUTE)
+        public val UUID_BLOCK_READ = UUID.fromString(GattAttributes.PCM_BLOCK_ATTRIBUTE)
 
         public val UUID_BATTERY_LEVEL = UUID.fromString(GattAttributes.BATTERY_LEVEL);
         public val UUID_BATTERY_STATUS = UUID.fromString(GattAttributes.BATTERY_STATUS);
-
-        public val UUID_TEST = UUID.fromString(GattAttributes.TEST_ATTRIBUTE);
-        public val UUID_GENERIC = UUID.fromString(GattAttributes.GENERIC_ATTRIBUTE);
     }
 
     // Implements callback methods for GATT events that the app cares about.  For example,
@@ -96,24 +79,23 @@ class BluetoothLeService: Service() {
     private val gattCallback = object : BluetoothGattCallback() {
 
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                connectionState = STATE_CONNECTED
+            when (newState) {
+                BluetoothProfile.STATE_CONNECTED -> {
+                    connectionState = STATE_CONNECTED
 
-                broadcastUpdate(ACTION_GATT_CONNECTED)
-                Log.i(TAG, "Attempting to start service discovery.")
-                Log.i(TAG, "Connected to GATT server.")
-                //toast("Connected to GATT server.");
-                gatt!!.discoverServices();
-                Log.i(TAG, "Connected to GATT server.")
+                    broadcastUpdate(ACTION_GATT_CONNECTED)
+                    Log.i(TAG, "Attempting to start service discovery.")
+                    gatt!!.discoverServices()
 
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                connectionState = STATE_DISCONNECTED
-                Log.i(TAG, "Disconnected from GATT server.")
-                //toast("Disconnected from GATT server.");
-
-                broadcastUpdate(ACTION_GATT_DISCONNECTED)
-            } else {
-                Log.i(TAG, "Other State");
+                }
+                BluetoothProfile.STATE_DISCONNECTED -> {
+                    connectionState = STATE_DISCONNECTED
+                    Log.i(TAG, "Disconnected from GATT server.")
+                    broadcastUpdate(ACTION_GATT_DISCONNECTED)
+                }
+                else -> {
+                    Log.i(TAG, "Other State");
+                }
             }
         }
 
@@ -121,31 +103,27 @@ class BluetoothLeService: Service() {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
                 clearDataArrays()
-                val services = gatt!!.services
+                val service = gatt!!.services.find { s -> s.uuid == UUID_PCM_SERVICE }
 
                 // Loops through available GATT Services.
-                for (gattService in services) {
-                    val gattCharacteristicsList = gattService.characteristics
-                    Log.e(TAG, "gattService uuid: " + gattService.uuid)
+                service?.let { s ->
+                    Log.d(TAG, "gattService uuid: " + s.uuid)
 
-
-                    // Loops through available Characteristics.
-                    for (gattCharacteristic in gattCharacteristicsList) {
+                    for (gattCharacteristic in service.characteristics) {
                         Log.e(
                             TAG,
                             "gattCharacteristic uuid: " + gattCharacteristic.uuid
                         )
                         if (isDataCharacteristic(gattCharacteristic) != 0) {
-                            if (isDataCharacteristic(gattCharacteristic) == GENERIC) {
-                                chars.add(gattCharacteristic)
-                            }
+                            chars.add(gattCharacteristic)
                         } else {
                             //toast("CONNECTED Fail");
-                            Log.e(TAG, "CONNECTED Fai")
+                            Log.d(TAG, "${gattCharacteristic.uuid} is PCM attribute")
                         }
                     }
                 }
 
+                // read file
                 //requestCharacteristics(gatt);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: $status")
@@ -156,7 +134,7 @@ class BluetoothLeService: Service() {
         fun requestCharacteristics(gatt: BluetoothGatt) {
             //gatt.readCharacteristic(powerChar)
 
-            gatt.readCharacteristic(chars.get(chars.size -1))
+            gatt.readCharacteristic(chars.get(chars.size - 1))
         }
 
         override fun onCharacteristicWrite(
@@ -164,14 +142,35 @@ class BluetoothLeService: Service() {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            Log.e(TAG, "onCharacteristicWrite: ")
+            Log.e(TAG, "onCharacteristicWrite: ${characteristic?.uuid}")
 
-            if(status != BluetoothGatt.GATT_SUCCESS){
-                Log.d("onCharacteristicWrite", "Failed write, retrying")
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, "Failed write, retrying")
                 gatt?.writeCharacteristic(characteristic)
             } else {
-                broadcastUpdate(ACTION_PREPARE_SUCCESS)
-                writeEnable = true
+                Log.d(TAG, "onCharacteristicWrite LogSate: ${logState}")
+                Log.d(TAG, "onCharacteristicWrite: ${characteristic?.value?.get(0)}")
+                when (flow) {
+                    1 -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        readWriteEnable = true
+                    }
+
+                    2 -> {
+                        readWriteEnable = true
+
+                        if (logState == 1) {
+                            //logState = 2
+                            //sendLogFile()
+                        } else if (logState == 2) {
+                            logState = 3
+                            sendLogFile()
+                        } else if (logState == 5){
+                            logState = 3
+                            sendLogFile()
+                        }
+                    }
+                }
             }
         }
 
@@ -180,7 +179,7 @@ class BluetoothLeService: Service() {
             characteristic: BluetoothGattCharacteristic?
         ) {
 
-            Log.e(TAG, "onCharacteristicChanged: ")
+            Log.e(TAG, "onCharacteristicChanged: ${characteristic?.uuid}")
 
             val data = characteristic?.value
 
@@ -197,25 +196,63 @@ class BluetoothLeService: Service() {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            Log.e(TAG, "onCharacteristicRead status$status")
+            Log.d(TAG, "onCharacteristicRead status$status")
 
-            Log.e(
-                TAG,
-                "onCharacteristicRead characteristic: " + characteristic!!.uuid
-            )
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d(
+                    TAG,
+                    "onCharacteristicRead characteristic: " + characteristic!!.uuid
+                )
 
-            //if (UUID_POWER.equals(characteristic.getUuid())) {
+                //if (UUID_POWER.equals(characteristic.getUuid())) {
 
-            //if (UUID_POWER.equals(characteristic.getUuid())) {
-            Log.e(TAG, "onCharacteristicRead Data read: ")
+                //if (UUID_POWER.equals(characteristic.getUuid())) {
+                Log.d(TAG, "onCharacteristicRead Data read: ")
 
-            val data = characteristic.value
+                val data = characteristic.value
 
-            if (data != null && data.size > 0)
-                for (b in data) {
-                val i: Byte = b and 0xFF.toByte()
-                Log.e(TAG, "Byte: ${i.toInt()}")
+                /*if (data != null && data.size > 0)
+                    for (b in data) {
+                        val i: Byte = b and 0xFF.toByte()
+                        Log.e(TAG, "Byte: ${i.toInt()}")
+                    }*/
+
+                when (flow) {
+                    1 -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        readWriteEnable = true
+                    }
+
+                    2 -> {
+                        readWriteEnable = true
+
+                        if (logState == 3) {
+                            if (characteristic.uuid == UUID_STATUS_READ){
+                                if (data[0].toInt() == 0x01){
+                                    logState = 4
+                                    sendLogFile()
+                                } else if (data[0].toInt() == 0x02) {
+                                    logState = 6
+                                    sendLogFile()
+                                }
+                            }
+                        } else if (logState == 4) {
+                            if (characteristic.uuid == UUID_BLOCK_READ){
+                                data.forEach {
+                                    file.add(it)
+                                }
+                                logState = 5
+                                sendLogFile()
+                            }
+                        }
+                    }
+                }
+
+            } else {
+
             }
+
+
             //}
 
             /*if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -259,6 +296,7 @@ class BluetoothLeService: Service() {
             status: Int
         ) {
             super.onDescriptorRead(gatt, descriptor, status)
+            Log.d(TAG, "onDescriptorRead status$status")
         }
 
         override fun onDescriptorWrite(
@@ -267,6 +305,18 @@ class BluetoothLeService: Service() {
             status: Int
         ) {
             super.onDescriptorWrite(gatt, descriptor, status)
+            Log.d(TAG, "onDescriptorWrite status$status")
+
+        }
+
+        override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
+            super.onReadRemoteRssi(gatt, rssi, status)
+            Log.d(TAG, "onReadRemoteRssi $rssi")
+        }
+
+        override fun onServiceChanged(gatt: BluetoothGatt) {
+            super.onServiceChanged(gatt)
+            Log.d(TAG, "onServiceChanged")
         }
     }
 
@@ -275,28 +325,29 @@ class BluetoothLeService: Service() {
     }
 
     fun isDataCharacteristic(characteristic: BluetoothGattCharacteristic): Int {
-        return if (UUID_BATTERY_LEVEL == characteristic.uuid) {
-            BATTERY_LEVEL_READ
-        } else if (UUID_X_ACCELERATION == characteristic.uuid) {
-            X_ACCELERATION_READ
-        } else if (UUID_Y_ACCELERATION == characteristic.uuid) {
-            Y_ACCELERATION_READ
-        } else if (UUID_Z_ACCELERATION == characteristic.uuid) {
-            Z_ACCELERATION_READ
-        } else if (UUID_X_GYROSCOPE == characteristic.uuid) {
-            X_GYROSCOPE_READ
-        } else if (UUID_Y_GYROSCOPE == characteristic.uuid) {
-            Y_GYROSCOPE_READ
-        } else if (UUID_Z_GYROSCOPE == characteristic.uuid) {
-            Z_GYROSCOPE_READ
-        } else if (UUID_ACCELERATION_TIME == characteristic.uuid) {
-            ACCELEROMETER_TIME_READ
-        } else if (UUID_TEST == characteristic.uuid) {
-            TEST
-        } else if (UUID_GENERIC == characteristic.uuid) {
-            GENERIC
-        } else {
-            0
+        return when (characteristic.uuid) {
+            UUID_BATTERY_LEVEL -> {
+                0
+            }
+            UUID_COMMANDS -> {
+                PCM_COMMANDS_READ
+            }
+            UUID_EVENT -> {
+                PCM_EVENT_READ
+            }
+            UUID_SW_READ -> {
+                PCM_SW_READ
+            }
+            UUID_STATUS_READ -> {
+                PCM_STATUS_READ
+            }
+
+            UUID_BLOCK_READ -> {
+                PCM_BLOCK_READ
+            }
+            else -> {
+                0
+            }
         }
     }
 
@@ -310,109 +361,22 @@ class BluetoothLeService: Service() {
         val charWhat = isDataCharacteristic(characteristic)
         val count: Int
         when (charWhat) {
-            BATTERY_LEVEL_READ -> {
-                batteryLevel =
-                    characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)
-                Log.d(
-                    TAG,
-                    String.format("Received battery level: %d", batteryLevel)
-                )
-                intent.putExtra(ACTION_BATTERY_LEVEL, batteryLevel.toString())
-            }
-            X_ACCELERATION_READ -> {
-                count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
-                xAcc[count] = characteristic.getStringValue(0).split(",").toTypedArray()[0].toInt()
-                if (!xAcc.contains(null)) {
-                    sweepComplete = true
-                }
-                Log.d(
-                    TAG, String.format(
-                        "Received x acceleration level: %d",
-                        xAcc[count]
-                    )
-                )
-            }
-            Y_ACCELERATION_READ -> {
-                count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
-                yAcc[count] = characteristic.getStringValue(0).split(",").toTypedArray()[0].toInt()
-                if (!yAcc.contains(null)) {
-                    sweepComplete = true
-                }
-                Log.d(
-                    TAG, String.format(
-                        "Received y acceleration level: %d",
-                        yAcc[count]
-                    )
-                )
-            }
-            Z_ACCELERATION_READ -> {
-                count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
-                zAcc[count] = characteristic.getStringValue(0).split(",").toTypedArray()[0].toInt()
-                if (!zAcc.contains(null)) {
-                    sweepComplete = true
-                }
-                Log.d(
-                    TAG, String.format(
-                        "Received z acceleration level: %d",
-                        zAcc[count]
-                    )
-                )
-            }
-            X_GYROSCOPE_READ -> {
-                count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
-                xGyro[count] = characteristic.getStringValue(0).split(",").toTypedArray()[0].toInt()
-                if (!xGyro.contains(null)) {
-                    sweepComplete = true
-                }
-                Log.d(
-                    TAG, String.format(
-                        "Received x gyroscope level: %d",
-                        xGyro[count]
-                    )
-                )
-            }
-            Y_GYROSCOPE_READ -> {
-                count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
-                yGyro[count] = characteristic.getStringValue(0).split(",").toTypedArray()[0].toInt()
-                if (!yGyro.contains(null)) {
-                    sweepComplete = true
-                }
-                Log.d(
-                    TAG, String.format(
-                        "Received y gyroscope level: %d",
-                        yGyro[count]
-                    )
-                )
-            }
-            Z_GYROSCOPE_READ -> {
-                count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
-                zGyro[count] = characteristic.getStringValue(0).split(",").toTypedArray()[0].toInt()
-                if (!zGyro.contains(null)) {
-                    sweepComplete = true
-                }
-                Log.d(
-                    TAG, String.format(
-                        "Received z gyroscope level: %d",
-                        zGyro[count]
-                    )
-                )
-            }
-            ACCELEROMETER_TIME_READ -> {
+            /*ACCELEROMETER_TIME_READ -> {
                 count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
                 //                accTime.set(count,Integer.parseInt(characteristic.getStringValue(0).split(",")[0]));
                 accTime[count] = Date()
                 if (!accTime.contains(null)) {
                     sweepComplete = true
                 }
-            }
-            TEST -> {
-                Log.e(TAG, "read Test: " + characteristic.getStringValue(0))
+            }*/
+            PCM_COMMANDS_READ -> {
+                /*Log.e(TAG, "read Test: " + characteristic.getStringValue(0))
                 count = characteristic.getStringValue(0).split(",").toTypedArray()[1].toInt()
                 //                accTime.set(count,Integer.parseInt(characteristic.getStringValue(0).split(",")[0]));
                 accTime[count] = Date()
                 if (!accTime.contains(null)) {
                     sweepComplete = true
-                }
+                }*/
             }
             else -> {
                 // For all other profiles, writes the data formatted in HEX.
@@ -432,42 +396,8 @@ class BluetoothLeService: Service() {
         }
     }
 
-    private fun saveAgmData() {
-        accelerometerData = AccelerometerData(xAcc, yAcc, zAcc, xGyro, yGyro, zGyro, accTime)
-        val sharedPref = getSharedPreferences(getString(R.string.agm_key), MODE_PRIVATE)
-        val prefBleDeviceEditor = sharedPref.edit()
-        prefBleDeviceEditor.putString(
-            "x_acc_avg",
-            java.lang.String.valueOf(accelerometerData.xAccelerationAvg)
-        )
-        prefBleDeviceEditor.putString(
-            "y_acc_avg",
-            java.lang.String.valueOf(accelerometerData.yAccelerationAvg)
-        )
-        prefBleDeviceEditor.putString(
-            "z_acc_avg",
-            java.lang.String.valueOf(accelerometerData.zAccelerationAvg)
-        )
-        prefBleDeviceEditor.apply()
-    }
-
     private fun clearDataArrays() {
-        xAcc = ArrayList()
-        yAcc = ArrayList()
-        zAcc = ArrayList()
-        xGyro = ArrayList()
-        yGyro = ArrayList()
-        zGyro = ArrayList()
-        accTime = ArrayList()
-        for (i in 0..4) {
-            xAcc.add(i, null)
-            yAcc.add(i, null)
-            zAcc.add(i, null)
-            xGyro.add(i, null)
-            yGyro.add(i, null)
-            zGyro.add(i, null)
-            accTime.add(i, null)
-        }
+        //todo
     }
 
     override fun onBind(p0: Intent?): IBinder? {
@@ -604,20 +534,107 @@ class BluetoothLeService: Service() {
         Log.e(TAG, "Read char: " + requestCharacteristics(bleGatt!!, powerChar))
     }*/
 
+    private fun findCommandChar() = this.chars.find { c -> c.uuid == UUID_COMMANDS }
+    private fun findStatusChar() = this.chars.find { c -> c.uuid == UUID_STATUS_READ }
+    private fun findBlockChar() = this.chars.find { c -> c.uuid == UUID_BLOCK_READ }
+
+    private val file = ArrayList<Byte>()
+    private var logState = 2
+    fun sendLogFile() {
+        Log.d(TAG, "sendLogFile Entry status: ${logState}")
+        when (logState) {
+            /*1 -> {
+                val cha = findStatusChar()
+                if (cha == null) {
+                    broadcastUpdate(ACTION_ERROR)
+                    return
+                }
+
+                val bytearray = byteArrayOf(0x03)
+
+                cha.value = bytearray
+                bleGatt?.setCharacteristicNotification(cha, true)
+                val b = bleGatt?.writeCharacteristic(cha)
+                Log.d(TAG, "sendLogFile writeCharacteristic: ${b}")
+                readWriteEnable = false
+            }*/
+            2 -> {
+                val cha = findCommandChar()
+                if (cha == null) {
+                    broadcastUpdate(ACTION_ERROR)
+                    return
+                }
+
+                val bytearray = byteArrayOf(0x0B, 0x00, 0x00, 0x00, 0x00)
+                //bytearray.plus(Utils.intTo4Bytes(0))
+
+                cha.value = bytearray
+                bleGatt?.writeCharacteristic(cha)
+                readWriteEnable = false
+            }
+            3 -> {
+                val cha = findStatusChar()
+                if (cha == null) {
+                    broadcastUpdate(ACTION_ERROR)
+                    return
+                }
+                bleGatt?.readCharacteristic(cha)
+                readWriteEnable = false
+
+            }
+            4 -> {
+                val cha = findBlockChar()
+                if (cha == null) {
+                    broadcastUpdate(ACTION_ERROR)
+                    return
+                }
+                bleGatt?.readCharacteristic(cha)
+                readWriteEnable = false
+            }
+            5 -> {
+                val cha = findStatusChar()
+                if (cha == null) {
+                    broadcastUpdate(ACTION_ERROR)
+                    return
+                }
+                val bytearray = byteArrayOf(0x04)
+
+                cha.value = bytearray
+                bleGatt?.writeCharacteristic(cha)
+                readWriteEnable = false
+            }
+            6 -> {
+                Log.d(TAG, "Finish")
+                Log.d(TAG, "${file.size}")
+
+                Utils.writeFileOnInternalStorage(baseContext, "Text.txt", file)
+                logState = 0
+            }
+        }
+
+        flow = 2
+    }
+
     @SuppressLint("MissingPermission")
     fun prepare(cycle: Int) {
-        if (chars.size == 0) {
+
+        val cha = findCommandChar()
+        if (cha == null) {
             broadcastUpdate(ACTION_ERROR)
             return
         }
 
-        val cha = chars[0]
+        if (cycle == 6) {
+            flow = 0
+            return
+        }
 
-        if (cycle == 5){
+        flow = 1
+        if (cycle == 5) {
             val bytearray = byteArrayOf(0x03, cycle.toByte())
             cha.value = bytearray
             bleGatt?.writeCharacteristic(cha)
-            writeEnable = false
+            readWriteEnable = false
         } else if (cycle % 2 == 0) {
             val bytearray = byteArrayOf(0x01, cycle.toByte())
             bytearray.plus(Utils.floatToBytes(100f))
@@ -625,7 +642,7 @@ class BluetoothLeService: Service() {
 
             cha.value = bytearray
             bleGatt?.writeCharacteristic(cha)
-            writeEnable = false
+            readWriteEnable = false
         } else {
             val bytearray = byteArrayOf(0x02, cycle.toByte())
             bytearray.plus(Utils.floatToBytes(20f))
@@ -633,7 +650,7 @@ class BluetoothLeService: Service() {
 
             cha.value = bytearray
             bleGatt?.writeCharacteristic(cha)
-            writeEnable = false
+            readWriteEnable = false
         }
 
     }

@@ -1,6 +1,7 @@
 package com.tmp.thermaquil.activities
 
 import android.Manifest.permission
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.*
@@ -31,7 +32,7 @@ class MainActivity : BaseActivity() {
     private var bleService: BluetoothLeService? = null
     private var bleAdapter: BluetoothAdapter? = null
 
-    private var deviceAddress: String? = null
+    var deviceAddress: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.e("Frank", "MainActivity")
@@ -46,7 +47,7 @@ class MainActivity : BaseActivity() {
 
         loadingLayout = findViewById(R.id.loadingLayout)
 
-        //connectDevice()
+        connectDevice()
     }
 
     override fun onResume() {
@@ -109,21 +110,25 @@ class MainActivity : BaseActivity() {
     private fun locationCheck() {
         if (ActivityCompat.checkSelfPermission(
                 this,
-                permission.ACCESS_FINE_LOCATION
+                permission.WRITE_EXTERNAL_STORAGE
             ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Location permission has not been granted.
+            || ActivityCompat.checkSelfPermission(
+                this,
+                permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED) {
+
+            // Bluetooth admin permission has not been granted.
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(permission.ACCESS_FINE_LOCATION),
+                arrayOf(permission.WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE,
+                    permission.ACCESS_FINE_LOCATION),
                 REQUEST_LOCATION_ID
             )
         }
     }
 
     override fun showLoading(isShow: Boolean) {
-        //todo
-        loadingLayout?.visibility = View.GONE//if (isShow) View.VISIBLE else View.GONE
+        loadingLayout?.visibility = if (isShow) View.VISIBLE else View.GONE
     }
 
     override fun onRequestPermissionsResult(
@@ -134,11 +139,13 @@ class MainActivity : BaseActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         grantResults.forEach { code ->
-            if (REQUEST_LOCATION_ID != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
+            if (code != PackageManager.PERMISSION_GRANTED) {
+                toast("Permission Denied")
                 finish()
             }
         }
+
+        connectDevice()
     }
 
     fun connectDevice() {
@@ -153,8 +160,9 @@ class MainActivity : BaseActivity() {
 
         Log.d(TAG, "deviceName $deviceName deviceAddress $deviceAddress")
 
-        if (deviceAddress == null)
+        if (deviceAddress == null){
             return
+        }
 
         // Initializes a Bluetooth adapter.
         val bluetoothManager = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
@@ -231,6 +239,7 @@ class MainActivity : BaseActivity() {
                     }
                 }
                 BluetoothLeService.ACTION_ERROR -> {
+                    showLoading(false)
                     toast("Error when sending")
                 }
                 BluetoothLeService.ACTION_PREPARE_SUCCESS -> {
@@ -238,6 +247,8 @@ class MainActivity : BaseActivity() {
                         cycle++
                         prepare()
                     } else {
+                        cycle = 6
+                        prepare()
                         showLoading(false)
                         toast("prepared")
                     }
@@ -266,4 +277,10 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    fun sendFile(){
+        bleService?.let {
+            //showLoading(true)
+            it.sendLogFile()
+        }
+    }
 }

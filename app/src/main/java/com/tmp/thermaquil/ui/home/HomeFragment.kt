@@ -57,9 +57,13 @@ class HomeFragment : BaseFragment() {
             }
 
             btnStart.setOnClickListener {
-                findNavController().navigate(R.id.action_homeFragment_to_passcodeFragment)
-                //(requireActivity() as MainActivity).prepare()
+                //findNavController().navigate(R.id.action_homeFragment_to_passcodeFragment)
+                (requireActivity() as MainActivity).sendFile()
             }
+        }
+
+        if((requireActivity() as MainActivity).deviceAddress == null){
+            findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
         }
     }
 
