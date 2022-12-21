@@ -16,6 +16,7 @@ import com.tmp.thermaquil.R
 import com.tmp.thermaquil.activities.MainActivity
 import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.adapter.StudyAdapter
+import com.tmp.thermaquil.data.models.SubmissionData
 import com.tmp.thermaquil.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -34,6 +35,7 @@ class HomeFragment : BaseFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d(TAG, "HomeFragment")
         dataBinding = FragmentHomeBinding.inflate(inflater)
         dataBinding.lifecycleOwner = viewLifecycleOwner
         return dataBinding.root
@@ -42,12 +44,32 @@ class HomeFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = StudyAdapter(arrayListOf()) {
+        (requireActivity() as MainActivity).connectDevice()
 
+        adapter = StudyAdapter(
+            arrayListOf(
+                SubmissionData(21.2.toLong(), "prepare", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "get Log", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "Start", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "end", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "resume", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "resume", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "+ time", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "- time", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "+ temp", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "- temp", 1, arrayListOf())
+            )
+        ) {
+            when(it.name) {
+                "prepare" -> {
+
+                }
+            }
         }
 
         dataBinding.list?.apply {
-            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+            layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
             adapter = this@HomeFragment.adapter
         }
 
@@ -58,11 +80,11 @@ class HomeFragment : BaseFragment() {
 
             btnStart.setOnClickListener {
                 //findNavController().navigate(R.id.action_homeFragment_to_passcodeFragment)
-                (requireActivity() as MainActivity).sendFile()
+                //(requireActivity() as MainActivity).sendFile()
             }
         }
 
-        if((requireActivity() as MainActivity).deviceAddress == null){
+        if ((requireActivity() as MainActivity).deviceAddress == null) {
             findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
         }
     }
@@ -79,7 +101,10 @@ class HomeFragment : BaseFragment() {
 
     private fun getDeviceAddress() {
         sharedPrefBLE =
-            requireActivity().getSharedPreferences(getString(R.string.ble_device_key), Context.MODE_PRIVATE)
+            requireActivity().getSharedPreferences(
+                getString(R.string.ble_device_key),
+                Context.MODE_PRIVATE
+            )
         deviceName = sharedPrefBLE.getString("name", null)
         deviceAddress = sharedPrefBLE.getString("address", null)
     }

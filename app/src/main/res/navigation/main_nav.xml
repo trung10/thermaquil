@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_nav"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/startFragment">
 
     <fragment
         android:id="@+id/homeFragment"
@@ -19,6 +19,23 @@
         <action
             android:id="@+id/action_homeFragment_to_SettingsFragment"
             app:destination="@id/SettingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/startFragment"
+        android:name="com.tmp.thermaquil.ui.start.StartFragment"
+        android:label="StartFragment" >
+        <action
+            android:id="@+id/action_startFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@+id/startFragment"
+            app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_startFragment_to_phoneFragment"
+            app:destination="@id/phoneFragment"
+            app:popUpTo="@+id/startFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
 
     <dialog
@@ -96,7 +113,10 @@
         android:label="PhoneFragment" >
         <action
             android:id="@+id/action_phoneFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            app:destination="@id/homeFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@+id/phoneFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
 
 

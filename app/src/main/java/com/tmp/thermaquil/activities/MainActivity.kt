@@ -17,6 +17,7 @@ import androidx.navigation.findNavController
 import com.tmp.thermaquil.R
 import com.tmp.thermaquil.base.activities.BaseActivity
 import com.tmp.thermaquil.ble.BluetoothLeService
+import com.tmp.thermaquil.common.getPhone
 import com.tmp.thermaquil.common.toast
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -55,19 +56,20 @@ class MainActivity : BaseActivity() {
         super.onResume()
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter())
 
-        if (bleService != null && deviceAddress != null) {
+        if (bleService != null && deviceAddress != null && bleService!!.connectionState == 0) {
             val result = bleService!!.connect(deviceAddress!!)
             Log.d(TAG, "Connect request result=$result")
+            if (result) {
+                showLoading(true)
+            } else {
+                toast("Cannot connect")
+            }
         }
     }
 
     override fun onPause() {
         super.onPause()
         unregisterReceiver(mGattUpdateReceiver)
-    }
-
-    override fun onBackPressed() {
-        //super.onBackPressed()
     }
 
     override fun onDestroy() {
@@ -151,6 +153,10 @@ class MainActivity : BaseActivity() {
     fun connectDevice() {
         Log.d(TAG, "connectDevice entry")
 
+        if (getPhone() == null){
+            return
+        }
+
         bleCheck()
         locationCheck()
 
@@ -175,7 +181,6 @@ class MainActivity : BaseActivity() {
             return
         }
 
-        showLoading(true)
         establishServiceConnection(deviceAddress)
     }
 
@@ -198,8 +203,12 @@ class MainActivity : BaseActivity() {
             }
             // Automatically connects to the device upon successful start-up initialization.
             Log.d(TAG, "onServiceConnected connect")
-            deviceAddress!!.let {
-                bleService!!.connect(it)
+            deviceAddress?.let {
+                if (bleService!!.connect(it)) {
+                    showLoading(true)
+                } else {
+                    toast("Cannot connect")
+                }
             }
         }
 

@@ -7,6 +7,7 @@ import android.view.inputmethod.InputMethodManager
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
+import java.nio.ByteBuffer
 import kotlin.experimental.and
 
 
@@ -67,29 +68,30 @@ object Utils{
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    fun floatToBytes(f: Float): ArrayList<Byte> {
-        val intBytes = f.toBits()
-        return arrayListOf((intBytes shr 24).toByte(), (intBytes shr 16).toByte(), (intBytes shr 8).toByte(), intBytes.toByte())
+    fun floatToBytes(f: Float): ByteArray {
+        val bits = f.toBits()
+        return byteArrayOf(
+            (bits shr 24).toByte(),
+            (bits shr 16).toByte(),
+            (bits shr 8).toByte(),
+            bits.toByte()
+        )
     }
 
-    fun bytesToFloat(bytes: List<Byte>): Float {
-        val intBits: Int =
-            bytes[0].toInt() shl 24 or ((bytes[1]
-                    and 0xFF.toByte()).toInt() shl 16) or ((bytes[2]
-                    and 0xFF.toByte()).toInt() shl 8) or (bytes[3]
-                    and 0xFF.toByte()).toInt()
-        return Float.fromBits(intBits)
+    fun bytesToFloat(byteArray: ByteArray): Float{
+        val buffer = ByteBuffer.wrap(byteArray)
+        return buffer.float
     }
 
-    fun bytesToInt(bytes: List<Byte>): Int {
-        return (bytes[3].toInt() shl 24) or
-                (bytes[2].toInt() and 0xff shl 16) or
-                (bytes[1].toInt() and 0xff shl 8) or
-                (bytes[0].toInt() and 0xff)
+    fun intTo4Bytes(data: Int, size: Int = 4): ByteArray = ByteArray(size) { i ->
+        (data shr (i*8)).toByte()
     }
 
-    fun intTo4Bytes(i: Int): ArrayList<Byte> {
-        return arrayListOf((i shr 0).toByte(), (i shr 8).toByte(), (i shr 16).toByte(), (i shr 24).toByte())
+    fun bytesToInt(buffer: ByteArray, offset: Int = 0): Int {
+        return (buffer[offset + 3].toInt() shl 24) or
+                (buffer[offset + 2].toInt() and 0xff shl 16) or
+                (buffer[offset + 1].toInt() and 0xff shl 8) or
+                (buffer[offset + 0].toInt() and 0xff)
     }
 
     fun writeFileOnInternalStorage(mcoContext: Context, sFileName: String?, bytes: ArrayList<Byte>) {

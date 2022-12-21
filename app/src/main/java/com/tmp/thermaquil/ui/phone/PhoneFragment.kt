@@ -9,12 +9,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.base.fragment.BaseFragment
+import com.tmp.thermaquil.common.setPhone
 import com.tmp.thermaquil.common.toast
 import com.tmp.thermaquil.databinding.PhoneFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class PhoneFragment : Fragment() {
+class PhoneFragment : BaseFragment() {
 
     private val viewModel: PhoneViewModel by viewModels()
     private lateinit var dataBinding: PhoneFragmentBinding
@@ -53,6 +55,7 @@ class PhoneFragment : Fragment() {
                             // error
                             toast("OTP Invalidate")
                         } else {
+                            setPhone(edtPhone.text.toString())
                             viewModel.updatePhone(otp)
                             findNavController().navigate(R.id.action_phoneFragment_to_homeFragment)
                         }

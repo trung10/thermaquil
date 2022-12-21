@@ -36,7 +36,7 @@ class BluetoothLeService : Service() {
     private var bleDeviceAddress: String? = null
     private var bleGatt: BluetoothGatt? = null
     private lateinit var notifyCharacteristics: BluetoothGattCharacteristic
-    private var connectionState: Int = STATE_DISCONNECTED
+    var connectionState: Int = STATE_DISCONNECTED
     var chars = arrayListOf<BluetoothGattCharacteristic>()
 
     private lateinit var batteryData: BatteryData
