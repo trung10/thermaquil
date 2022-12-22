@@ -19,6 +19,7 @@ import com.tmp.thermaquil.ble.GattAttributes.PCM_SW_READ
 import com.tmp.thermaquil.common.Utils
 import com.tmp.thermaquil.data.models.AccelerometerData
 import com.tmp.thermaquil.data.models.BatteryData
+import com.tmp.thermaquil.data.models.Data
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.experimental.and
@@ -45,7 +46,23 @@ class BluetoothLeService : Service() {
 
     private var readWriteEnable = true
 
-    private var flow = 0 // 1 prepare, 2 log file
+    enum class FLOW{
+        NONE,
+        PREPARE,
+        LOGFILE,
+        START,
+        END,
+        RESUME,
+        PAUSE,
+        TIME,
+        HOT_TEMP,
+        COLD_TEMP,
+        POWER,
+        SWITCH,
+        REAL_TIME
+    }
+
+    private var flow = FLOW.NONE // 1 prepare, 2 log file
 
     companion object {
         private final val STATE_DISCONNECTED = 0
@@ -115,6 +132,7 @@ class BluetoothLeService : Service() {
                             "gattCharacteristic uuid: " + gattCharacteristic.uuid
                         )
                         if (isDataCharacteristic(gattCharacteristic) != 0) {
+                            //gattCharacteristic.writeType = BluetoothGattCharacteristic.
                             chars.add(gattCharacteristic)
                         } else {
                             //toast("CONNECTED Fail");
@@ -150,15 +168,14 @@ class BluetoothLeService : Service() {
             } else {
                 Log.d(TAG, "onCharacteristicWrite LogSate: ${logState}")
                 Log.d(TAG, "onCharacteristicWrite: ${characteristic?.value?.get(0)}")
+                readWriteEnable = true
                 when (flow) {
-                    1 -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
-                        readWriteEnable = true
+                    FLOW.PREPARE -> {
+                        Data.defaultTreatment.currentIndex++
+                        prepare()
                     }
 
-                    2 -> {
-                        readWriteEnable = true
-
+                    FLOW.LOGFILE -> {
                         if (logState == 1) {
                             //logState = 2
                             //sendLogFile()
@@ -169,6 +186,46 @@ class BluetoothLeService : Service() {
                             logState = 3
                             sendLogFile()
                         }
+                    }
+
+                    FLOW.START -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.END -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.RESUME -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.PAUSE -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.TIME -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.HOT_TEMP -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.COLD_TEMP -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.POWER -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.SWITCH -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                    }
+
+                    FLOW.REAL_TIME -> {
+                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
                     }
                 }
             }
@@ -218,12 +275,7 @@ class BluetoothLeService : Service() {
                     }*/
 
                 when (flow) {
-                    1 -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
-                        readWriteEnable = true
-                    }
-
-                    2 -> {
+                    FLOW.LOGFILE -> {
                         readWriteEnable = true
 
                         if (logState == 3) {
@@ -487,53 +539,6 @@ class BluetoothLeService : Service() {
         return true
     }
 
-    /*fun send1() {
-        if (testChar == null) {
-            Toast.makeText(this, "Cannot find 19B10001 char", Toast.LENGTH_SHORT).show()
-            return
-        }
-        Log.e(TAG, "send 1")
-        val bytearray = byteArrayOf(0x01.toByte())
-        testChar.value = bytearray
-        bleGatt?.writeCharacteristic(testChar)
-    }
-
-    fun send0() {
-        if (testChar == null) {
-            Toast.makeText(this, "Cannot find 19B10001 char", Toast.LENGTH_SHORT).show()
-            return
-        }
-        Log.e(TAG, "send 0")
-        val bytearray = byteArrayOf(0x00.toByte())
-        testChar.value = bytearray
-        bleGatt?.writeCharacteristic(testChar)
-    }
-
-
-    fun sendPowerOn() {
-        Log.e(TAG, "sendPowerOn")
-        if (powerChar == null) {
-            Log.e(TAG, "return")
-            return
-        }
-        val bytearray = byteArrayOf(0x07.toByte(), 0x01)
-        powerChar.value = bytearray
-        bleGatt?.writeCharacteristic(powerChar)
-        Log.e(TAG, "Read char: " + requestCharacteristics(bleGatt!!, powerChar))
-    }
-
-    fun sendPowerOff() {
-        if (powerChar == null) {
-            Log.e(TAG, "return")
-            return
-        }
-        Log.e(TAG, "sendPowerOff")
-        val bytearray = byteArrayOf(0x07.toByte(), 0x00)
-        powerChar.value = bytearray
-        bleGatt?.writeCharacteristic(powerChar)
-        Log.e(TAG, "Read char: " + requestCharacteristics(bleGatt!!, powerChar))
-    }*/
-
     private fun findCommandChar() = this.chars.find { c -> c.uuid == UUID_COMMANDS }
     private fun findStatusChar() = this.chars.find { c -> c.uuid == UUID_STATUS_READ }
     private fun findBlockChar() = this.chars.find { c -> c.uuid == UUID_BLOCK_READ }
@@ -543,21 +548,6 @@ class BluetoothLeService : Service() {
     fun sendLogFile() {
         Log.d(TAG, "sendLogFile Entry status: ${logState}")
         when (logState) {
-            /*1 -> {
-                val cha = findStatusChar()
-                if (cha == null) {
-                    broadcastUpdate(ACTION_ERROR)
-                    return
-                }
-
-                val bytearray = byteArrayOf(0x03)
-
-                cha.value = bytearray
-                bleGatt?.setCharacteristicNotification(cha, true)
-                val b = bleGatt?.writeCharacteristic(cha)
-                Log.d(TAG, "sendLogFile writeCharacteristic: ${b}")
-                readWriteEnable = false
-            }*/
             2 -> {
                 val cha = findCommandChar()
                 if (cha == null) {
@@ -609,50 +599,213 @@ class BluetoothLeService : Service() {
 
                 Utils.writeFileOnInternalStorage(baseContext, "Text.txt", file)
                 logState = 0
+                broadcastUpdate(ACTION_PREPARE_SUCCESS)
             }
         }
 
-        flow = 2
+        flow = FLOW.LOGFILE
     }
 
-    @SuppressLint("MissingPermission")
-    fun prepare(cycle: Int) {
 
+    @SuppressLint("MissingPermission")
+    fun prepare() {
         val cha = findCommandChar()
         if (cha == null) {
             broadcastUpdate(ACTION_ERROR)
             return
         }
 
-        if (cycle == 6) {
-            flow = 0
+        val data = Data.defaultTreatment
+
+        if (data.currentIndex >= data.cycles.size) {
+            val bytearray = byteArrayOf(0x02)
+            cha.value = bytearray
+            bleGatt?.writeCharacteristic(cha)
+            readWriteEnable = false
+            if (data.currentIndex > data.cycles.size) {
+                flow = FLOW.NONE
+                broadcastUpdate(ACTION_PREPARE_SUCCESS)
+
+            }
             return
         }
 
-        flow = 1
-        if (cycle == 5) {
-            val bytearray = byteArrayOf(0x03, cycle.toByte())
-            cha.value = bytearray
-            bleGatt?.writeCharacteristic(cha)
-            readWriteEnable = false
-        } else if (cycle % 2 == 0) {
-            val bytearray = byteArrayOf(0x01, cycle.toByte())
-            bytearray.plus(Utils.floatToBytes(100f))
-            bytearray.plus(Utils.intTo4Bytes(900))
+        flow = FLOW.PREPARE
+        val cycle = data.cycles[data.currentIndex]
+        var bytearray = byteArrayOf(0x01, cycle.orderByCycle.toByte())
+        bytearray = bytearray.plus(Utils.floatToBytes(cycle.hotSetPont))
+        bytearray = bytearray.plus(Utils.intTo4Bytes(cycle.hotTime))
+        bytearray = bytearray.plus(Utils.floatToBytes(cycle.coldSetPont))
+        bytearray = bytearray.plus(Utils.intTo4Bytes(cycle.coldTime))
 
-            cha.value = bytearray
-            bleGatt?.writeCharacteristic(cha)
-            readWriteEnable = false
-        } else {
-            val bytearray = byteArrayOf(0x02, cycle.toByte())
-            bytearray.plus(Utils.floatToBytes(20f))
-            bytearray.plus(Utils.intTo4Bytes(200))
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
 
-            cha.value = bytearray
-            bleGatt?.writeCharacteristic(cha)
-            readWriteEnable = false
+    fun start() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
         }
 
+        flow = FLOW.START
+        val bytearray = byteArrayOf(0x03, 0x01)
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun pause() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.PAUSE
+        val bytearray = byteArrayOf(0x03, 0x02)
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun resume() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.RESUME
+        val bytearray = byteArrayOf(0x03, 0x03)
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun end() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.END
+        val bytearray = byteArrayOf(0x03, 0x04)
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setHotTemp(f: Float) {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.HOT_TEMP
+        var bytearray = byteArrayOf(0x04)
+        bytearray = bytearray.plus(Utils.floatToBytes(f))
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setColdTemp(f: Float) {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.COLD_TEMP
+        var bytearray = byteArrayOf(0x05)
+        bytearray = bytearray.plus(Utils.floatToBytes(f))
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setDuration(time: Int) {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.TIME
+        var bytearray = byteArrayOf(0x06)
+        bytearray = bytearray.plus(Utils.intTo4Bytes(time))
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setPower(on: Boolean) {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.POWER
+        var bytearray = byteArrayOf(0x07)
+        if (on)
+            bytearray = bytearray.plus(0x00)
+        else
+            bytearray = bytearray.plus(0x01)
+
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setSwitch() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.SWITCH
+        val bytearray = byteArrayOf(0x09)
+
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setRealTime(time: Long) {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.REAL_TIME
+        var bytearray = byteArrayOf(0x0C)
+        bytearray = bytearray.plus(0x12)
+        bytearray = bytearray.plus(0x00)
+        bytearray = bytearray.plus(0x00)
+        bytearray = bytearray.plus(0x0C)
+        bytearray = bytearray.plus(0x02)
+        bytearray = bytearray.plus(0x16)
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
     }
 
     /**

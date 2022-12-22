@@ -85,9 +85,10 @@ object Utils{
 
     fun intTo4Bytes(data: Int, size: Int = 4): ByteArray = ByteArray(size) { i ->
         (data shr (i*8)).toByte()
-    }
+    }.reversedArray()
 
-    fun bytesToInt(buffer: ByteArray, offset: Int = 0): Int {
+    fun bytesToInt(buffers: ByteArray, offset: Int = 0): Int {
+        val buffer = buffers.reversedArray()
         return (buffer[offset + 3].toInt() shl 24) or
                 (buffer[offset + 2].toInt() and 0xff shl 16) or
                 (buffer[offset + 1].toInt() and 0xff shl 8) or

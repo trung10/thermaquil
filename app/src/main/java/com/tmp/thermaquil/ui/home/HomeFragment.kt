@@ -49,20 +49,61 @@ class HomeFragment : BaseFragment() {
         adapter = StudyAdapter(
             arrayListOf(
                 SubmissionData(21.2.toLong(), "prepare", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "get Log", 1, arrayListOf()),
                 SubmissionData(21.2.toLong(), "Start", 1, arrayListOf()),
                 SubmissionData(21.2.toLong(), "end", 1, arrayListOf()),
                 SubmissionData(21.2.toLong(), "resume", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "resume", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "+ time", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "- time", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "+ temp", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "- temp", 1, arrayListOf())
-            )
+                SubmissionData(21.2.toLong(), "pause", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "set hot", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "set cold", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "set duration", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "power on", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "power off", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "Get logs file", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "Cold/Hot Cycle Switch", 1, arrayListOf()),
+                SubmissionData(21.2.toLong(), "Set real time", 1, arrayListOf())
+                )
         ) {
-            when(it.name) {
+            Log.d(TAG, "Click: ${it.name}")
+            showLoading(true)
+            when (it.name) {
                 "prepare" -> {
-
+                    (requireActivity() as MainActivity).prepare()
+                }
+                "Get logs file" -> {
+                    (requireActivity() as MainActivity).sendFile()
+                }
+                "Start" -> {
+                    (requireActivity() as MainActivity).start()
+                }
+                "end" -> {
+                    (requireActivity() as MainActivity).end()
+                }
+                "resume" -> {
+                    (requireActivity() as MainActivity).resume()
+                }
+                "pause" -> {
+                    (requireActivity() as MainActivity).pause()
+                }
+                "set duration" -> {
+                    (requireActivity() as MainActivity).setDuration(50 * 60)
+                }
+                "set hot" -> {
+                    (requireActivity() as MainActivity).setHot(150f)
+                }
+                "set cold" -> {
+                    (requireActivity() as MainActivity).setCold(15f)
+                }
+                "power on" -> {
+                    (requireActivity() as MainActivity).powerOn()
+                }
+                "power off" -> {
+                    (requireActivity() as MainActivity).powerOff()
+                }
+                "Cold/Hot Cycle Switch" -> {
+                    (requireActivity() as MainActivity).switch()
+                }
+                "Set real time" -> {
+                    (requireActivity() as MainActivity).setRealTime(100f)
                 }
             }
         }

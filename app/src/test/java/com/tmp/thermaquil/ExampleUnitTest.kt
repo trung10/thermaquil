@@ -1,5 +1,7 @@
 package com.tmp.thermaquil
 
+import com.tmp.thermaquil.common.Utils
+import com.tmp.thermaquil.data.models.Data
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -12,6 +14,20 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        val cycle = Data.defaultTreatment.cycles[0]
+
+
+        var bytearray = byteArrayOf(0x01, cycle.orderByCycle.toByte())
+        bytearray = bytearray.plus(Utils.floatToBytes(cycle.hotSetPont))
+        bytearray = bytearray.plus(Utils.intTo4Bytes(cycle.hotTime))
+        bytearray = bytearray.plus(Utils.floatToBytes(cycle.coldSetPont))
+        bytearray = bytearray.plus(Utils.intTo4Bytes(cycle.coldTime))
+
+        bytearray.forEach {
+
+        }
+
+
+        assertEquals(4, bytearray)
     }
 }

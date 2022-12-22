@@ -19,6 +19,7 @@ import com.tmp.thermaquil.base.activities.BaseActivity
 import com.tmp.thermaquil.ble.BluetoothLeService
 import com.tmp.thermaquil.common.getPhone
 import com.tmp.thermaquil.common.toast
+import com.tmp.thermaquil.data.models.Data
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -252,15 +253,8 @@ class MainActivity : BaseActivity() {
                     toast("Error when sending")
                 }
                 BluetoothLeService.ACTION_PREPARE_SUCCESS -> {
-                    if (cycle < 5){
-                        cycle++
-                        prepare()
-                    } else {
-                        cycle = 6
-                        prepare()
-                        showLoading(false)
-                        toast("prepared")
-                    }
+                    showLoading(false)
+                    toast("send success")
                 }
             }
         }
@@ -278,11 +272,65 @@ class MainActivity : BaseActivity() {
         return intentFilter
     }
 
-    private var cycle = 1
+
     fun prepare() {
         bleService?.let {
-            showLoading(true)
-            it.prepare(cycle)
+            it.prepare()
+        }
+    }
+
+    fun start() {
+        bleService?.let {
+            it.start()
+        }
+    }
+
+    fun end() {
+        bleService?.let {
+            it.end()
+        }
+    }
+
+    fun resume() {
+        bleService?.let {
+            it.resume()
+        }
+    }
+
+    fun pause() {
+        bleService?.let {
+            it.pause()
+        }
+    }
+
+    fun setHot(f: Float) {
+        bleService?.let {
+            it.setColdTemp(f)
+        }
+    }
+
+    fun setCold(f: Float) {
+        bleService?.let {
+            it.setColdTemp(f)
+        }
+    }
+
+    fun powerOn() {
+        bleService?.let {
+            it.setPower(true)
+        }
+    }
+
+    fun powerOff() {
+        bleService?.let {
+            it.setPower(false)
+        }
+    }
+
+    fun switch() {
+        Log.d(TAG, "switch entry")
+        bleService?.let {
+            it.setSwitch()
         }
     }
 
@@ -290,6 +338,20 @@ class MainActivity : BaseActivity() {
         bleService?.let {
             //showLoading(true)
             it.sendLogFile()
+        }
+    }
+
+    fun setDuration(int: Int) {
+        bleService?.let {
+            //showLoading(true)
+            it.setDuration(int)
+        }
+    }
+
+    fun setRealTime(timestamp: Float){
+        bleService?.let {
+            //showLoading(true)
+            it.setRealTime(System.currentTimeMillis()/1000)
         }
     }
 }
