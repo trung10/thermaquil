@@ -9,17 +9,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.activities.MainActivity
+import com.tmp.thermaquil.activities.MainViewModel
 import com.tmp.thermaquil.base.fragment.BaseFragment
+import com.tmp.thermaquil.data.models.COMMAND
 import com.tmp.thermaquil.databinding.PauseTreatmentFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class PauseTreatmentFragment : DialogFragment() {
 
-    private val viewModel: PauseTreatmentViewModel by viewModels()
+    private val viewModel: MainViewModel by activityViewModels()
     private lateinit var dataBinding: PauseTreatmentFragmentBinding
 
     override fun onCreateView(
@@ -41,12 +45,15 @@ class PauseTreatmentFragment : DialogFragment() {
 
     private fun initListener() {
         with(dataBinding){
-            btnStop?.setOnClickListener {
+            btnStop.setOnClickListener {
+                (requireActivity() as MainActivity).sendCommand(COMMAND.cmEnd)
                 dismiss()
                 findNavController().navigate(R.id.action_pauseTreatmentFragment_to_summaryFragment)
             }
 
             btnResume?.setOnClickListener {
+                (requireActivity() as MainActivity).sendCommand(COMMAND.cmResume)
+                viewModel.setResume(true)
                 findNavController().navigateUp()
             }
         }

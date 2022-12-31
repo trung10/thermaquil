@@ -12,14 +12,17 @@ import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import androidx.navigation.findNavController
 import com.tmp.thermaquil.R
 import com.tmp.thermaquil.base.activities.BaseActivity
 import com.tmp.thermaquil.ble.BluetoothLeService
 import com.tmp.thermaquil.common.getPhone
 import com.tmp.thermaquil.common.toast
+import com.tmp.thermaquil.data.models.COMMAND
 import com.tmp.thermaquil.data.models.Data
+import com.tmp.thermaquil.data.models.SEND_STATE
+import com.tmp.thermaquil.data.models.Treatment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -33,6 +36,8 @@ class MainActivity : BaseActivity() {
 
     private var bleService: BluetoothLeService? = null
     private var bleAdapter: BluetoothAdapter? = null
+
+    private val viewModel: MainViewModel by viewModels()
 
     var deviceAddress: String? = null
 
@@ -61,7 +66,7 @@ class MainActivity : BaseActivity() {
             val result = bleService!!.connect(deviceAddress!!)
             Log.d(TAG, "Connect request result=$result")
             if (result) {
-                showLoading(true)
+                //showLoading(true)
             } else {
                 toast("Cannot connect")
             }
@@ -250,11 +255,23 @@ class MainActivity : BaseActivity() {
                 }
                 BluetoothLeService.ACTION_ERROR -> {
                     showLoading(false)
-                    toast("Error when sending")
+                    viewModel.setSendState(SEND_STATE.FAIL)
+                    toast("Cannot send data")
                 }
-                BluetoothLeService.ACTION_PREPARE_SUCCESS -> {
+                BluetoothLeService.ACTION_SUCCESS -> {
                     showLoading(false)
-                    toast("send success")
+                    viewModel.setSendState(SEND_STATE.SUCCESS)
+                    //toast("Send Data success")
+                }
+
+                BluetoothLeService.ACTION_EVENT_RECEIVE -> {
+                    //toast("EVENT RECEIVE")
+                }
+
+                BluetoothLeService.ACTION_EVENT_READY -> {
+                    Log.d("Trung", "BluetoothLeService.ACTION_EVENT_READY ")
+                    if (viewModel.ready.value != null && !viewModel.ready.value!!)
+                        viewModel.setReadyState(true)
                 }
             }
         }
@@ -268,90 +285,19 @@ class MainActivity : BaseActivity() {
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_READ_COMPLETED)
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE)
         intentFilter.addAction(BluetoothLeService.ACTION_ERROR)
-        intentFilter.addAction(BluetoothLeService.ACTION_PREPARE_SUCCESS)
+        intentFilter.addAction(BluetoothLeService.ACTION_SUCCESS)
+        intentFilter.addAction(BluetoothLeService.ACTION_EVENT_RECEIVE)
+        intentFilter.addAction(BluetoothLeService.ACTION_EVENT_READY)
         return intentFilter
     }
 
+    fun sendCommand(cm: COMMAND, vararg data: Any){
+        viewModel.setSendState(SEND_STATE.SENDING)
 
-    fun prepare() {
-        bleService?.let {
-            it.prepare()
+        if (cm == COMMAND.cmPrepare) {
+            viewModel.setReadyState(false)
         }
-    }
 
-    fun start() {
-        bleService?.let {
-            it.start()
-        }
-    }
-
-    fun end() {
-        bleService?.let {
-            it.end()
-        }
-    }
-
-    fun resume() {
-        bleService?.let {
-            it.resume()
-        }
-    }
-
-    fun pause() {
-        bleService?.let {
-            it.pause()
-        }
-    }
-
-    fun setHot(f: Float) {
-        bleService?.let {
-            it.setColdTemp(f)
-        }
-    }
-
-    fun setCold(f: Float) {
-        bleService?.let {
-            it.setColdTemp(f)
-        }
-    }
-
-    fun powerOn() {
-        bleService?.let {
-            it.setPower(true)
-        }
-    }
-
-    fun powerOff() {
-        bleService?.let {
-            it.setPower(false)
-        }
-    }
-
-    fun switch() {
-        Log.d(TAG, "switch entry")
-        bleService?.let {
-            it.setSwitch()
-        }
-    }
-
-    fun sendFile(){
-        bleService?.let {
-            //showLoading(true)
-            it.sendLogFile()
-        }
-    }
-
-    fun setDuration(int: Int) {
-        bleService?.let {
-            //showLoading(true)
-            it.setDuration(int)
-        }
-    }
-
-    fun setRealTime(timestamp: Float){
-        bleService?.let {
-            //showLoading(true)
-            it.setRealTime(System.currentTimeMillis()/1000)
-        }
+        bleService?.sendCommand(cm, data.toList())
     }
 }

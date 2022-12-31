@@ -73,5 +73,8 @@
     <color name="color3E9629">#3E9629</color>
     <color name="colorE3F5DF">#E3F5DF</color>
 
+    <color name="red">#d32f2f</color>
+    <color name="grey">#a9a9a9</color>
+    <color name="transparent">#00000000</color>
 
 </resources>

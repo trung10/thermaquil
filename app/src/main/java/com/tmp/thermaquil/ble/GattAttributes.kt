@@ -18,6 +18,7 @@ object GattAttributes {
     val PCM_STATUS_ATTRIBUTE = "b57e5d26-6251-4c1e-b565-3b565da1f29b"
 
     //Decriptor
+    val PCM_DESCRIPTOR = "00002902-0000-1000-8000-00805f9b34fb"
 
     // simple data
     var BATTERY_LEVEL = "00002a19-0000-1000-8000-00805f9b34fb"

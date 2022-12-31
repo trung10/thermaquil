@@ -8,20 +8,17 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import com.tmp.thermaquil.R
 import com.tmp.thermaquil.ble.GattAttributes.PCM_BLOCK_READ
 import com.tmp.thermaquil.ble.GattAttributes.PCM_COMMANDS_READ
 import com.tmp.thermaquil.ble.GattAttributes.PCM_EVENT_READ
 import com.tmp.thermaquil.ble.GattAttributes.PCM_STATUS_READ
 import com.tmp.thermaquil.ble.GattAttributes.PCM_SW_READ
 import com.tmp.thermaquil.common.Utils
-import com.tmp.thermaquil.data.models.AccelerometerData
 import com.tmp.thermaquil.data.models.BatteryData
-import com.tmp.thermaquil.data.models.Data
+import com.tmp.thermaquil.data.models.COMMAND
+import com.tmp.thermaquil.data.models.Treatment
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.experimental.and
 
 /*
@@ -46,7 +43,7 @@ class BluetoothLeService : Service() {
 
     private var readWriteEnable = true
 
-    enum class FLOW{
+    enum class FLOW {
         NONE,
         PREPARE,
         LOGFILE,
@@ -59,7 +56,9 @@ class BluetoothLeService : Service() {
         COLD_TEMP,
         POWER,
         SWITCH,
-        REAL_TIME
+        REAL_TIME,
+        ReservoirFilling,
+        TEST
     }
 
     private var flow = FLOW.NONE // 1 prepare, 2 log file
@@ -76,13 +75,17 @@ class BluetoothLeService : Service() {
         public val ACTION_BATTERY_LEVEL = "ACTION_BATTERY_LEVEL";
         public val ACTION_DATA_AVAILABLE = "ACTION_DATA_AVAILABLE";
         public val ACTION_ERROR = "ACTION_ERROR";
-        public val ACTION_PREPARE_SUCCESS = "ACTION_PREPARE_SUCCESS";
+        public val ACTION_SUCCESS = "ACTION_PREPARE_SUCCESS";
+        public val ACTION_EVENT_RECEIVE = "ACTION_EVENT_RECEIVE"
+        public val ACTION_EVENT_READY = "ACTION_EVENT_READY"
 
         public val UUID_PCM_SERVICE = UUID.fromString(GattAttributes.PCM_SERVICE)
 
         public val UUID_COMMANDS = UUID.fromString(GattAttributes.PCM_COMMANDS_ATTRIBUTE)
         public val UUID_EVENT = UUID.fromString(GattAttributes.PCM_EVENT_ATTRIBUTE)
         public val UUID_SW_READ = UUID.fromString(GattAttributes.PCM_SW_ATTRIBUTE)
+
+        val UUID_DESCIPTOR = UUID.fromString(GattAttributes.PCM_DESCRIPTOR)
 
         public val UUID_STATUS_READ = UUID.fromString(GattAttributes.PCM_STATUS_ATTRIBUTE)
         public val UUID_BLOCK_READ = UUID.fromString(GattAttributes.PCM_BLOCK_ATTRIBUTE)
@@ -96,6 +99,7 @@ class BluetoothLeService : Service() {
     private val gattCallback = object : BluetoothGattCallback() {
 
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+            Log.d(TAG, "onConnectionStateChange entry")
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     connectionState = STATE_CONNECTED
@@ -117,6 +121,7 @@ class BluetoothLeService : Service() {
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+            Log.d(TAG, "onServicesDiscovered entry")
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
                 clearDataArrays()
@@ -133,6 +138,8 @@ class BluetoothLeService : Service() {
                         )
                         if (isDataCharacteristic(gattCharacteristic) != 0) {
                             //gattCharacteristic.writeType = BluetoothGattCharacteristic.
+
+                            setCharacteristicNotification(gattCharacteristic, true)
                             chars.add(gattCharacteristic)
                         } else {
                             //toast("CONNECTED Fail");
@@ -171,8 +178,10 @@ class BluetoothLeService : Service() {
                 readWriteEnable = true
                 when (flow) {
                     FLOW.PREPARE -> {
-                        Data.defaultTreatment.currentIndex++
-                        prepare()
+                        currentTreatment?.let {
+                            currentTreatment!!.currentIndex++
+                            prepare(currentTreatment!!)
+                        }
                     }
 
                     FLOW.LOGFILE -> {
@@ -182,50 +191,53 @@ class BluetoothLeService : Service() {
                         } else if (logState == 2) {
                             logState = 3
                             sendLogFile()
-                        } else if (logState == 5){
+                        } else if (logState == 5) {
                             logState = 3
                             sendLogFile()
                         }
                     }
 
                     FLOW.START -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.END -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.RESUME -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.PAUSE -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.TIME -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.HOT_TEMP -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.COLD_TEMP -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.POWER -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.SWITCH -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
 
                     FLOW.REAL_TIME -> {
-                        broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                        broadcastUpdate(ACTION_SUCCESS)
+                    }
+                    FLOW.TEST -> {
+                        broadcastUpdate(ACTION_SUCCESS)
                     }
                 }
             }
@@ -235,17 +247,33 @@ class BluetoothLeService : Service() {
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
         ) {
-
+            Log.d(TAG, "onCharacteristicChanged entry")
+            var d: ByteArray?
+            broadcastUpdate(ACTION_EVENT_RECEIVE)
             Log.e(TAG, "onCharacteristicChanged: ${characteristic?.uuid}")
+            characteristic?.let {
+                if (isDataCharacteristic(it) != 0) {
+                    if (it.uuid == UUID_EVENT) {
+                        d = it.value
 
-            val data = characteristic?.value
 
-            if (data != null && data.size > 0)
-                for (b in data) {
-                    val i: Byte = b and 0xFF.toByte()
-                    Log.e(TAG, "Byte: ${i.toInt()}")
+                        if (d != null && d!!.size > 0) {
+                            /*for (b in d!!) {
+                                val i: Byte = b and 0xFF.toByte()
+                                Log.e(TAG, "onCharacteristicChanged Read byte: ${i.toInt()}")
+                            }*/
+                            Log.d(TAG, "onCharacteristicChanged Event: ${d!![8]}")
+
+
+                            Log.e(TAG, "onCharacteristicChanged Read byte: ${d!![13].toUByte().toInt()}")
+                            if (d!![13].toUByte().toInt() == 0x02)
+                                Log.e("Trung", "broadcastUpdate(ACTION_EVENT_READY)")
+
+                            broadcastUpdate(ACTION_EVENT_READY)
+                        }
+                    }
                 }
-
+            }
         }
 
         override fun onCharacteristicRead(
@@ -268,19 +296,13 @@ class BluetoothLeService : Service() {
 
                 val data = characteristic.value
 
-                /*if (data != null && data.size > 0)
-                    for (b in data) {
-                        val i: Byte = b and 0xFF.toByte()
-                        Log.e(TAG, "Byte: ${i.toInt()}")
-                    }*/
-
                 when (flow) {
                     FLOW.LOGFILE -> {
                         readWriteEnable = true
 
                         if (logState == 3) {
-                            if (characteristic.uuid == UUID_STATUS_READ){
-                                if (data[0].toInt() == 0x01){
+                            if (characteristic.uuid == UUID_STATUS_READ) {
+                                if (data[0].toInt() == 0x01) {
                                     logState = 4
                                     sendLogFile()
                                 } else if (data[0].toInt() == 0x02) {
@@ -289,7 +311,7 @@ class BluetoothLeService : Service() {
                                 }
                             }
                         } else if (logState == 4) {
-                            if (characteristic.uuid == UUID_BLOCK_READ){
+                            if (characteristic.uuid == UUID_BLOCK_READ) {
                                 data.forEach {
                                     file.add(it)
                                 }
@@ -303,43 +325,6 @@ class BluetoothLeService : Service() {
             } else {
 
             }
-
-
-            //}
-
-            /*if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-
-                switch (isDataCharacteristic(characteristic)) {
-                    case X_ACCELERATION_READ:
-                    case Y_ACCELERATION_READ:
-                    case Z_ACCELERATION_READ:
-                    case X_GYROSCOPE_READ:
-                    case Y_GYROSCOPE_READ:
-                    case Z_GYROSCOPE_READ:
-                    case ACCELEROMETER_TIME_READ:
-                        if (sweepComplete) {
-                            chars.remove(chars.get(chars.size() - 1));
-                            sweepComplete = false;
-                        }
-
-                        break;
-
-                    default:
-                        chars.remove(chars.get(chars.size() - 1));
-                        break;
-                }
-
-                if (chars.size() > 0) {
-                    requestCharacteristics(gatt);
-
-                } else {
-                    Log.i(TAG, "Gatt server data read completed.");
-                    saveAgmData();
-                    broadcastUpdate(ACTION_DATA_READ_COMPLETED);
-                    disconnect();
-                }
-            }*/
         }
 
         override fun onDescriptorRead(
@@ -599,40 +584,41 @@ class BluetoothLeService : Service() {
 
                 Utils.writeFileOnInternalStorage(baseContext, "Text.txt", file)
                 logState = 0
-                broadcastUpdate(ACTION_PREPARE_SUCCESS)
+                broadcastUpdate(ACTION_SUCCESS)
             }
         }
 
         flow = FLOW.LOGFILE
     }
 
+    var currentTreatment: Treatment? = null
 
     @SuppressLint("MissingPermission")
-    fun prepare() {
+    fun prepare(data: Treatment) {
         val cha = findCommandChar()
         if (cha == null) {
             broadcastUpdate(ACTION_ERROR)
             return
         }
 
-        val data = Data.defaultTreatment
+        currentTreatment = data
 
-        if (data.currentIndex >= data.cycles.size) {
-            val bytearray = byteArrayOf(0x02)
+        if (data.currentIndex == data.cycles.size) {
+            val bytearray = byteArrayOf(COMMAND.cmPrepareForFirst.cm.first.toByte())
             cha.value = bytearray
             bleGatt?.writeCharacteristic(cha)
             readWriteEnable = false
-            if (data.currentIndex > data.cycles.size) {
-                flow = FLOW.NONE
-                broadcastUpdate(ACTION_PREPARE_SUCCESS)
-
-            }
+            return
+        } else if (data.currentIndex > data.cycles.size) {
+            flow = FLOW.NONE
+            broadcastUpdate(ACTION_SUCCESS)
             return
         }
 
         flow = FLOW.PREPARE
         val cycle = data.cycles[data.currentIndex]
-        var bytearray = byteArrayOf(0x01, cycle.orderByCycle.toByte())
+        var bytearray =
+            byteArrayOf(COMMAND.cmPrepare.cm.first.toByte(), cycle.orderByCycle.toByte())
         bytearray = bytearray.plus(Utils.floatToBytes(cycle.hotSetPont))
         bytearray = bytearray.plus(Utils.intTo4Bytes(cycle.hotTime))
         bytearray = bytearray.plus(Utils.floatToBytes(cycle.coldSetPont))
@@ -651,7 +637,8 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.START
-        val bytearray = byteArrayOf(0x03, 0x01)
+        val bytearray =
+            byteArrayOf(COMMAND.cmStart.cm.first.toByte(), COMMAND.cmStart.cm.second!!.toByte())
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
@@ -666,7 +653,8 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.PAUSE
-        val bytearray = byteArrayOf(0x03, 0x02)
+        val bytearray =
+            byteArrayOf(COMMAND.cmPause.cm.first.toByte(), COMMAND.cmPause.cm.second!!.toByte())
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
@@ -681,7 +669,8 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.RESUME
-        val bytearray = byteArrayOf(0x03, 0x03)
+        val bytearray =
+            byteArrayOf(COMMAND.cmResume.cm.first.toByte(), COMMAND.cmResume.cm.second!!.toByte())
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
@@ -696,14 +685,16 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.END
-        val bytearray = byteArrayOf(0x03, 0x04)
+        val bytearray =
+            byteArrayOf(COMMAND.cmEnd.cm.first.toByte(), COMMAND.cmEnd.cm.second!!.toByte())
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
         readWriteEnable = false
     }
 
-    fun setHotTemp(f: Float) {
+    fun setTemp(f: Float) {
+        Log.d(TAG, "setHotTemp entry")
         val cha = findCommandChar()
         if (cha == null) {
             broadcastUpdate(ACTION_ERROR)
@@ -711,23 +702,7 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.HOT_TEMP
-        var bytearray = byteArrayOf(0x04)
-        bytearray = bytearray.plus(Utils.floatToBytes(f))
-
-        cha.value = bytearray
-        bleGatt?.writeCharacteristic(cha)
-        readWriteEnable = false
-    }
-
-    fun setColdTemp(f: Float) {
-        val cha = findCommandChar()
-        if (cha == null) {
-            broadcastUpdate(ACTION_ERROR)
-            return
-        }
-
-        flow = FLOW.COLD_TEMP
-        var bytearray = byteArrayOf(0x05)
+        var bytearray = byteArrayOf(COMMAND.cmSetTemp.cm.first.toByte())
         bytearray = bytearray.plus(Utils.floatToBytes(f))
 
         cha.value = bytearray
@@ -743,7 +718,7 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.TIME
-        var bytearray = byteArrayOf(0x06)
+        var bytearray = byteArrayOf(COMMAND.cmDuration.cm.first.toByte())
         bytearray = bytearray.plus(Utils.intTo4Bytes(time))
 
         cha.value = bytearray
@@ -759,12 +734,11 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.POWER
-        var bytearray = byteArrayOf(0x07)
+        var bytearray = byteArrayOf(COMMAND.cmPower.cm.first.toByte())
         if (on)
-            bytearray = bytearray.plus(0x00)
-        else
             bytearray = bytearray.plus(0x01)
-
+        else
+            bytearray = bytearray.plus(0x00)
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
@@ -779,8 +753,7 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.SWITCH
-        val bytearray = byteArrayOf(0x09)
-
+        val bytearray = byteArrayOf(COMMAND.cmSwitch.cm.first.toByte())
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
@@ -795,13 +768,81 @@ class BluetoothLeService : Service() {
         }
 
         flow = FLOW.REAL_TIME
-        var bytearray = byteArrayOf(0x0C)
+        var bytearray = byteArrayOf(COMMAND.cmRealTime.cm.first.toByte())
         bytearray = bytearray.plus(0x12)
         bytearray = bytearray.plus(0x00)
         bytearray = bytearray.plus(0x00)
         bytearray = bytearray.plus(0x0C)
         bytearray = bytearray.plus(0x02)
         bytearray = bytearray.plus(0x16)
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun setReservoirFilling(on: Boolean) {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.ReservoirFilling
+        var bytearray = byteArrayOf(COMMAND.cmReservoirFilling.cm.first.toByte())
+        if (on) {
+            bytearray = bytearray.plus(0x01)
+
+        } else {
+            bytearray = bytearray.plus(0x00)
+        }
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun set71() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.TEST
+        val bytearray = byteArrayOf(COMMAND.cm71.cm.first.toByte())
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun set72() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.TEST
+        val bytearray = byteArrayOf(COMMAND.cm72.cm.first.toByte())
+
+
+        cha.value = bytearray
+        bleGatt?.writeCharacteristic(cha)
+        readWriteEnable = false
+    }
+
+    fun set73() {
+        val cha = findCommandChar()
+        if (cha == null) {
+            broadcastUpdate(ACTION_ERROR)
+            return
+        }
+
+        flow = FLOW.TEST
+        val bytearray = byteArrayOf(COMMAND.cm73.cm.first.toByte())
+
 
         cha.value = bytearray
         bleGatt?.writeCharacteristic(cha)
@@ -868,9 +909,9 @@ class BluetoothLeService : Service() {
         bleGatt!!.setCharacteristicNotification(characteristic, enabled)
 
         // For only characteristics that are meant to notify
-        if (UUID_BATTERY_LEVEL == characteristic.uuid || UUID_BATTERY_STATUS == characteristic.uuid) {
+        if (UUID_EVENT == characteristic.uuid) {
             val descriptor =
-                characteristic.getDescriptor(UUID.fromString(GattAttributes.CLIENT_CHARACTERISTIC_CONFIG))
+                characteristic.getDescriptor(UUID_DESCIPTOR)
             descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             bleGatt!!.writeDescriptor(descriptor)
         }
@@ -884,6 +925,63 @@ class BluetoothLeService : Service() {
      */
     fun getSupportedGattServices(): List<BluetoothGattService?>? {
         return if (bleGatt == null) null else bleGatt!!.services
+    }
+
+    val obj = Any()
+    fun sendCommand(cm: COMMAND, data: List<Any>) {
+        Log.d(TAG, "command: $cm data: $data")
+        synchronized(obj) {
+            when (cm) {
+                COMMAND.cmPrepare -> {
+                    prepare(data[0] as Treatment)
+                }
+                COMMAND.cmStart -> {
+                    start()
+                }
+                COMMAND.cmPause -> {
+                    pause()
+                }
+                COMMAND.cmEnd -> {
+                    end()
+                }
+                COMMAND.cmResume -> {
+                    resume()
+                }
+                COMMAND.cmSetTemp -> {
+                    setTemp(data[0] as Float)
+                }
+                COMMAND.cmPower -> {
+                    setPower(data[0] as Boolean)
+                }
+                COMMAND.cmSwitch -> {
+                    setSwitch()
+                }
+                COMMAND.cmGetLog -> {
+                    sendLogFile()
+                }
+                COMMAND.cmRealTime -> {
+                    setRealTime(data[0] as Long)
+                }
+                COMMAND.cm71 -> {
+                    set71()
+                }
+                COMMAND.cm72 -> {
+                    set72()
+                }
+                COMMAND.cm73 -> {
+                    set73()
+                }
+                COMMAND.cmDuration -> {
+                    setDuration(data[0] as Int)
+                }
+                COMMAND.cmReservoirFilling -> {
+                    setReservoirFilling(data[0] as Boolean)
+                }
+                else -> {
+                    Log.d(TAG, "$cm is not support")
+                }
+            }
+        }
     }
 
 }

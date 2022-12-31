@@ -50,12 +50,12 @@ class CustomArrayAdapter (context: Context,
 
     private fun bindData(pos: Int, view: TextView): TextView {
         view.text = getItem(pos)
-        if (values.size <= 4) {
+        if (values.size <= 5) {
             when(pos) {
-                0 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorGreen))
-                1 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorE3A300))
-                2 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorWarn))
-                3 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorError))
+                1 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorGreen))
+                2 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorE3A300))
+                3 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorWarn))
+                4 -> view.setTextColor(ContextCompat.getColor(context, R.color.colorError))
                 else -> view.setTextColor(ContextCompat.getColor(context, R.color.white))
             }
         }

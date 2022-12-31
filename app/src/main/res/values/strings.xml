@@ -58,4 +58,10 @@
     <string name="cancel">Cancel</string>
     <string name="apply">Apply</string>
     <string name="ok">Ok</string>
+    <string name="treatment">Treatment</string>
+    <string name="resend_in_seconds">You can resend the code in %2d sec</string>
+    <string name="resend">Resend</string>
+    <string name="pre_condition">Pre-Condition</string>
+    <string name="auto_treatment">Auto Treatment</string>
+    <string name="instruction_in_data_submission">Instruction in data submission</string>
 </resources>

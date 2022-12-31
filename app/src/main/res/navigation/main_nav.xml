@@ -58,8 +58,10 @@
             android:id="@+id/action_treatmentFragment_to_SettingsFragment"
             app:destination="@id/SettingsFragment" />
         <action
-            android:id="@+id/action_treatmentFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            android:id="@+id/action_treatmentFragment_to_summaryFragment"
+            app:destination="@id/summaryFragment"
+            app:popUpTo="@id/homeFragment"
+            />
     </fragment>
 
     <fragment
@@ -77,7 +79,8 @@
         android:label="currentPainFragment" >
         <action
             android:id="@+id/action_currentPainFragment_to_deviceInfoFragment"
-            app:destination="@id/deviceInfoFragment" />
+            app:destination="@id/deviceInfoFragment"
+            app:popUpTo="@id/homeFragment"/>
         <action
             android:id="@+id/action_currentPainFragment_to_SettingsFragment"
             app:destination="@id/SettingsFragment" />
@@ -89,7 +92,8 @@
         android:label="deviceInfoFragment" >
         <action
             android:id="@+id/action_deviceInfoFragment_to_treatmentFragment"
-            app:destination="@id/treatmentFragment" />
+            app:destination="@id/treatmentFragment"
+            app:popUpTo="@id/homeFragment"/>
         <action
             android:id="@+id/action_deviceInfoFragment_to_SettingsFragment"
             app:destination="@id/SettingsFragment" />
@@ -99,12 +103,13 @@
         android:id="@+id/passcodeFragment"
         android:name="com.tmp.thermaquil.ui.passcode.PasscodeFragment"
         android:label="PasscodeFragment" >
-        <action
-            android:id="@+id/action_passcodeFragment_to_currentPainFragment"
-            app:destination="@id/currentPainFragment" />
+
         <action
             android:id="@+id/action_passcodeFragment_to_SettingsFragment"
             app:destination="@id/SettingsFragment" />
+        <action
+            android:id="@+id/action_passcodeFragment_to_treatmentInfoFragment"
+            app:destination="@id/treatmentInfoFragment" />
     </fragment>
 
     <fragment
@@ -126,7 +131,8 @@
         android:label="SummaryFragment" >
         <action
             android:id="@+id/action_summaryFragment_to_CompleteFragment"
-            app:destination="@id/CompleteFragment" />
+            app:destination="@id/CompleteFragment"
+            app:popUpTo="@id/homeFragment" />
         <action
             android:id="@+id/action_summaryFragment_to_SettingsFragment"
             app:destination="@id/SettingsFragment" />
@@ -139,7 +145,8 @@
 
         <action
             android:id="@+id/action_CompleteFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/homeFragment" />
     </fragment>
 
     <fragment
@@ -155,5 +162,19 @@
         android:id="@+id/SkinAndHairFragment"
         android:name="com.tmp.thermaquil.ui.skinAndHair.SkinAndHairFragment"
         android:label="SkinAndHairFragment" />
+
+    <fragment
+        android:id="@+id/treatmentInfoFragment"
+        android:name="com.tmp.thermaquil.ui.treatmentInfo.TreatmentInfoFragment"
+        android:label="TreatmentInfoFragment" >
+        <action
+            android:id="@+id/action_treatmentInfoFragment_to_currentPainFragment"
+            app:destination="@id/currentPainFragment"
+            app:popUpTo="@id/homeFragment"/>
+        <action
+            android:id="@+id/action_treatmentInfoFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+
+    </fragment>
 
 </navigation>

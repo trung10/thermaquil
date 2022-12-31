@@ -46,6 +46,7 @@ class PhoneFragment : BaseFragment() {
                             edtPhone.visibility = View.GONE
                             group.isGone = false
                             viewModel.updatePhone(p)
+                            viewModel.setTimer()
                         }
                     }
 
@@ -61,6 +62,21 @@ class PhoneFragment : BaseFragment() {
                         }
                     }
                 }
+            }
+
+            resend.setOnClickListener {
+                if (resend.text.toString() == getString(R.string.resend)){
+                    viewModel.setTimer()
+                }
+            }
+        }
+
+        viewModel.time.observe(viewLifecycleOwner) { time ->
+            if (time < 0){
+                //dataBinding.resend.text = getString(R.string.resend_in_seconds, 0)
+                dataBinding.resend.text = getString(R.string.resend)
+            }  else {
+                dataBinding.resend.text = getString(R.string.resend_in_seconds, time)
             }
         }
     }

@@ -19,7 +19,9 @@ class CurrentPainFragment : Fragment() {
     private val viewModel: CurrentPainViewModel by viewModels()
     private lateinit var dataBinding: CurrentPainFragmentBinding
 
-    private val listSeverity = arrayListOf("None", "Mild", "Moderate", "Severe")
+    private val listSeverity = arrayListOf("", "None", "Mild", "Moderate", "Severe")
+    private val paintLv = listOf("", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,8 +38,8 @@ class CurrentPainFragment : Fragment() {
 
         with(dataBinding) {
             spinnerSelectPain.adapter = CustomArrayAdapter(requireContext(),
-                R.layout.item_spinner, values =
-                listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+                R.layout.item_spinner, values = paintLv)
+
 
             spinnerSelectPain.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {

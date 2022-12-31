@@ -10,13 +10,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tmp.thermaquil.R
 import com.tmp.thermaquil.activities.MainActivity
 import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.adapter.StudyAdapter
-import com.tmp.thermaquil.data.models.SubmissionData
+import com.tmp.thermaquil.data.models.*
 import com.tmp.thermaquil.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,6 +30,8 @@ class HomeFragment : BaseFragment() {
     private var deviceAddress: String? = null
     private lateinit var sharedPrefBLE: SharedPreferences
     private lateinit var adapter: StudyAdapter
+
+    private val viewModel: HomeViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,48 +46,33 @@ class HomeFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         (requireActivity() as MainActivity).connectDevice()
 
         adapter = StudyAdapter(
-            arrayListOf(
-                SubmissionData(21.2.toLong(), "prepare", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "Start", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "end", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "resume", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "pause", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "set hot", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "set cold", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "set duration", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "power on", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "power off", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "Get logs file", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "Cold/Hot Cycle Switch", 1, arrayListOf()),
-                SubmissionData(21.2.toLong(), "Set real time", 1, arrayListOf())
-                )
+            Data.fakeTreaments
         ) {
             Log.d(TAG, "Click: ${it.name}")
             showLoading(true)
             when (it.name) {
                 "prepare" -> {
-                    (requireActivity() as MainActivity).prepare()
+                    (requireActivity() as MainActivity).sendCommand(COMMAND.cmPrepare)
                 }
                 "Get logs file" -> {
-                    (requireActivity() as MainActivity).sendFile()
+                    (requireActivity() as MainActivity).sendCommand(COMMAND.cmGetLog)
                 }
                 "Start" -> {
-                    (requireActivity() as MainActivity).start()
+                    (requireActivity() as MainActivity).sendCommand(COMMAND.cmStart)
                 }
                 "end" -> {
-                    (requireActivity() as MainActivity).end()
+                    (requireActivity() as MainActivity).sendCommand(COMMAND.cmEnd)
                 }
                 "resume" -> {
-                    (requireActivity() as MainActivity).resume()
+                    (requireActivity() as MainActivity).sendCommand(COMMAND.cmResume)
                 }
                 "pause" -> {
-                    (requireActivity() as MainActivity).pause()
+                    (requireActivity() as MainActivity).sendCommand(COMMAND.cmPause)
                 }
-                "set duration" -> {
+                /*"set duration" -> {
                     (requireActivity() as MainActivity).setDuration(50 * 60)
                 }
                 "set hot" -> {
@@ -105,6 +93,18 @@ class HomeFragment : BaseFragment() {
                 "Set real time" -> {
                     (requireActivity() as MainActivity).setRealTime(100f)
                 }
+                "71" -> {
+                    (requireActivity() as MainActivity).set71()
+                }
+                "72" -> {
+                    (requireActivity() as MainActivity).set72()
+                }
+                "73" -> {
+                    (requireActivity() as MainActivity).set73()
+                }*/
+                else ->{
+                    //viewModel.sendData(it)
+                }
             }
         }
 
@@ -120,8 +120,8 @@ class HomeFragment : BaseFragment() {
             }
 
             btnStart.setOnClickListener {
-                //findNavController().navigate(R.id.action_homeFragment_to_passcodeFragment)
-                //(requireActivity() as MainActivity).sendFile()
+                findNavController().navigate(R.id.action_homeFragment_to_passcodeFragment)
+                (requireActivity() as MainActivity).sendCommand(COMMAND.cmPower, true)
             }
         }
 
