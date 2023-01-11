@@ -9,13 +9,14 @@ import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.adapter.StudyAdapter
 import com.tmp.thermaquil.data.models.Data
 import com.tmp.thermaquil.data.models.SubmissionData
 import com.tmp.thermaquil.databinding.CompleteFragmentBinding
 import com.tmp.thermaquil.databinding.FragmentHomeBinding
 
-class CompleteFragment : Fragment() {
+class CompleteFragment : BaseFragment(R.layout.complete_fragment) {
 
     private lateinit var adapter: StudyAdapter
     private lateinit var dataBinding: CompleteFragmentBinding

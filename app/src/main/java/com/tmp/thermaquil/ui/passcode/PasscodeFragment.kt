@@ -11,6 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
 import com.tmp.thermaquil.activities.MainActivity
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.toast
 import com.tmp.thermaquil.data.models.COMMAND
 import com.tmp.thermaquil.data.models.Data
@@ -19,7 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
 @AndroidEntryPoint
-class PasscodeFragment : Fragment() {
+class PasscodeFragment : BaseFragment(R.layout.passcode_fragment) {
 
     companion object {
         fun newInstance() = PasscodeFragment()

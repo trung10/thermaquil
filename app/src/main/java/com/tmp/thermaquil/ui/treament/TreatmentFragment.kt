@@ -22,7 +22,7 @@ import com.tmp.thermaquil.databinding.TreatmentFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class TreatmentFragment : BaseFragment() {
+class TreatmentFragment : BaseFragment(R.layout.treatment_fragment) {
 
     private val viewModel: TreatmentViewModel by viewModels()
     private lateinit var dataBinding: TreatmentFragmentBinding

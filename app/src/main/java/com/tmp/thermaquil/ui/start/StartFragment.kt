@@ -8,11 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.getPhone
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class StartFragment : Fragment() {
+class StartFragment : BaseFragment(R.layout.fragment_start) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

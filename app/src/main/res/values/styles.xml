@@ -158,5 +158,58 @@
         <item name="android:paddingStart">@dimen/_2sdp</item>
     </style>
 
+    <style name="CustomStyle.Text.Normal16.Blue" parent="CustomStyle.Text.Normal16">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="CustomStyle.Text.Normal16.Blue.Medium" parent="CustomStyle.Text.Normal16.Blue">
+        <item name="android:fontFamily">@font/opensans_medium</item>
+        <item name="android:background">@drawable/background_button_normal</item>
+    </style>
+
+    <style name="CustomStyle.Text.Normal15.Grey.Medium" parent="CustomStyle.Text.Normal15.Grey">
+        <item name="android:fontFamily">@font/opensans_medium</item>
+    </style>
+
+    <style name="CustomStyle.Text.Normal15.Grey" parent="CustomStyle.Text.Normal16">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="CustomStyle.Text.Normal16" parent="Widget.MaterialComponents.TextView">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:fontFamily">@font/opensans</item>
+    </style>
+
+    <style name="CustomBottomSheetDialog" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomBottomSheet</item>
+    </style>
+
+    <style name="CustomBottomSheet" parent="Widget.MaterialComponents.BottomSheet">
+        <item name="shapeAppearanceOverlay">@style/CustomShapeAppearanceBottomSheetDialog</item>
+    </style>
+
+    <style name="CustomShapeAppearanceBottomSheetDialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeBottomRight">16dp</item>
+        <item name="cornerSizeBottomLeft">16dp</item>
+        <item name="android:background">@drawable/card_bordered_with_white_background</item>
+    </style>
+
+    <style name="CustomStyle.Text.Title20.Medium" parent="CustomStyle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:fontFamily">@font/opensans_medium</item>
+    </style>
+
+    <style name="CustomStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
 
 </resources>

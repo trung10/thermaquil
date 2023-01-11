@@ -64,4 +64,5 @@
     <string name="pre_condition">Pre-Condition</string>
     <string name="auto_treatment">Auto Treatment</string>
     <string name="instruction_in_data_submission">Instruction in data submission</string>
+    <string name="select">SELECT</string>
 </resources>

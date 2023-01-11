@@ -24,7 +24,7 @@ import com.tmp.thermaquil.databinding.FragmentSearchBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SearchFragment : BaseFragment(), BleRecyclerAdapter.ItemClickListener {
+class SearchFragment : BaseFragment(R.layout.fragment_search), BleRecyclerAdapter.ItemClickListener {
     //private lateinit var viewModel: TreatmentViewModel
     private lateinit var dataBinding: FragmentSearchBinding
     private var recyclerAdapter: BleRecyclerAdapter? = null

@@ -11,7 +11,7 @@ import com.tmp.thermaquil.databinding.FragmentDeviceInfoBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class DeviceInfoFragment : BaseFragment() {
+class DeviceInfoFragment : BaseFragment(R.layout.fragment_device_info) {
     private lateinit var dataBinding: FragmentDeviceInfoBinding
 
     override fun onCreateView(

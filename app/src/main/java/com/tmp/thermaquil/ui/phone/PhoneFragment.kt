@@ -16,7 +16,7 @@ import com.tmp.thermaquil.databinding.PhoneFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class PhoneFragment : BaseFragment() {
+class PhoneFragment : BaseFragment(R.layout.phone_fragment) {
 
     private val viewModel: PhoneViewModel by viewModels()
     private lateinit var dataBinding: PhoneFragmentBinding

@@ -21,7 +21,7 @@ import com.tmp.thermaquil.databinding.PauseTreatmentFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class PauseTreatmentFragment : DialogFragment() {
+class PauseTreatmentFragment : DialogFragment(R.layout.pause_treatment_fragment) {
 
     private val viewModel: MainViewModel by activityViewModels()
     private lateinit var dataBinding: PauseTreatmentFragmentBinding

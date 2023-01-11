@@ -1,5 +1,6 @@
 package com.tmp.thermaquil.base.fragment
 
+import androidx.annotation.LayoutRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.fragment.findNavController
@@ -9,7 +10,7 @@ import com.tmp.thermaquil.base.network.BaseNetworkException
 import com.tmp.thermaquil.base.viewmodel.BaseViewModel
 import com.tmp.thermaquil.common.EventObserver
 
-open class BaseFragment : Fragment() {
+open class BaseFragment(@LayoutRes layoutId: Int) : Fragment(layoutId) {
 
     protected fun navigateToPage(actionId: Int){
         findNavController().navigate(actionId)

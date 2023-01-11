@@ -9,9 +9,10 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
 import com.tmp.thermaquil.base.dialogs.WarringDialog
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.databinding.SkinAndHairFragmentBinding
 
-class SkinAndHairFragment : Fragment() {
+class SkinAndHairFragment : BaseFragment(R.layout.skin_and_hair_fragment) {
 
     private val viewModel: SkinAndHairViewModel by viewModels()
     private lateinit var dataBinding: SkinAndHairFragmentBinding

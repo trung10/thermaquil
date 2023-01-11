@@ -8,11 +8,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.databinding.SettingsFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SettingsFragment : Fragment() {
+class SettingsFragment : BaseFragment(R.layout.settings_fragment) {
 
     private val viewModel: SettingsViewModel by viewModels()
     private lateinit var binding: SettingsFragmentBinding

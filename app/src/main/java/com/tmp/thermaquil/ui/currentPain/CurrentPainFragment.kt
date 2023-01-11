@@ -9,12 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.adapter.CustomArrayAdapter
 import com.tmp.thermaquil.databinding.CurrentPainFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class CurrentPainFragment : Fragment() {
+class CurrentPainFragment : BaseFragment(R.layout.current_pain_fragment) {
 
     private val viewModel: CurrentPainViewModel by viewModels()
     private lateinit var dataBinding: CurrentPainFragmentBinding

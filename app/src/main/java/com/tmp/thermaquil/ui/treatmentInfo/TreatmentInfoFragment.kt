@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.tmp.thermaquil.R
+import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.databinding.FragmentDeviceInfoBinding
 import com.tmp.thermaquil.databinding.FragmentTreamentInfoBinding
 
@@ -15,7 +16,7 @@ import com.tmp.thermaquil.databinding.FragmentTreamentInfoBinding
  * Use the [TreatmentInfoFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class TreatmentInfoFragment : Fragment() {
+class TreatmentInfoFragment : BaseFragment(R.layout.fragment_treament_info) {
 
     private lateinit var dataBinding: FragmentTreamentInfoBinding
 

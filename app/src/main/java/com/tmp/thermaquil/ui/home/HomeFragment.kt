@@ -17,12 +17,13 @@ import com.tmp.thermaquil.R
 import com.tmp.thermaquil.activities.MainActivity
 import com.tmp.thermaquil.base.fragment.BaseFragment
 import com.tmp.thermaquil.common.adapter.StudyAdapter
+import com.tmp.thermaquil.customView.dialog.BottomSheetDialogHandler
 import com.tmp.thermaquil.data.models.*
 import com.tmp.thermaquil.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class HomeFragment : BaseFragment() {
+class HomeFragment : BaseFragment(R.layout.fragment_home) {
     val TAG = HomeFragment::class.java.simpleName
     private lateinit var dataBinding: FragmentHomeBinding
 
